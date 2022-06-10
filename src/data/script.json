@@ -1,0 +1,14 @@
+{
+    "": [
+        "(Another day at this accursed pet store....)",
+        "Eh? Who are you?",
+        "$askForName",
+        "This is a place of business durnit! I meant your email address. Young people moment.",
+        "$askForEmail",
+        "HAHAHA that email's faker than my right leg! I see through your act.",
+        "Anyway, hurry up with a password!",
+        "$askForPassword",
+        "I will put that in my handy plaintext notebook for later.",
+        "NOW GET TO YOUR INBOX AND START'A VERIFYING! Storm's comin', I feel it in my belly."
+    ]
+}
