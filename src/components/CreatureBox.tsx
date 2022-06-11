@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import useWindowSize from '../utils/useWindowSize';
 
 import CreaturePhysics, { PhysicsFunctions } from './CreaturePhysics';
 import { useSettings } from './Settings';
@@ -10,12 +11,12 @@ interface CreatureBoxProps {
 }
 
 export default function CreatureBox(props: CreatureBoxProps) {
+    const {width: screenWidth, height: screenHeight} = useWindowSize();
     const { width, height } = props;
     const { settings } = useSettings();
 
     const [canvasFunctions, setCanvasFunctions] =
         useState<PhysicsFunctions | null>(null);
-    const [fps, setFps] = useState(settings.fps);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
@@ -36,9 +37,9 @@ export default function CreatureBox(props: CreatureBoxProps) {
 
     useEffect(() => {
         if (canvasFunctions) {
-            canvasFunctions.setFPS(fps);
+            canvasFunctions.setFPS(settings.fps);
         }
-    }, [fps, canvasFunctions]);
+    }, [settings, canvasFunctions]);
 
     const boxRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -46,7 +47,7 @@ export default function CreatureBox(props: CreatureBoxProps) {
             const { offsetTop, offsetLeft } = boxRef.current;
             canvasFunctions.setCanvasOffset(offsetLeft, offsetTop);
         }
-    }, [canvasFunctions, boxRef.current]);
+    }, [canvasFunctions, boxRef, screenWidth, screenHeight]);
 
     return (
         <div

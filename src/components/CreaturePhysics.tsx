@@ -1,20 +1,5 @@
-export enum CreatureEmotion {
-    Neutral,
-    Happy,
-    Sad,
-    Angry,
-    Scared,
-    Sleepy,
-    Dead,
-    Surprised,
-    Confused,
-    Depressed,
-}
-
-export type Vec2 = {
-    x: number;
-    y: number;
-};
+import PhysicsObject, {Vec2} from "../utils/physics/PhysicsObject";
+import CreatureObject, {CreatureEmotion} from "../utils/physics/CreatureObject";
 
 export type PhysicsFunctions = {
     createCreature: (position?: Vec2, emotion?: CreatureEmotion) => number;
@@ -24,96 +9,6 @@ export type PhysicsFunctions = {
     setFPS: (fps: number) => void;
     setup: () => void;
 };
-
-interface PhysicsObjectProps {
-    id: number;
-    position: Vec2;
-    velocity: Vec2;
-    e: number;
-    mass: number;
-    radius: number;
-    color: string;
-    fixed: boolean;
-    grabbable: boolean;
-}
-
-class PhysicsObject {
-    id: number;
-    position: Vec2;
-    velocity: Vec2;
-    e: number;
-    mass: number;
-    radius: number;
-    color: string;
-    area: number;
-    fixed: boolean;
-    grabbable: boolean;
-
-    touchingMouse = false;
-    rotation = 0;
-    rotationProgress = 0;
-
-    grabbed = false;
-    grabX = 0;
-    grabY = 0;
-
-    constructor(props: PhysicsObjectProps) {
-        this.id = props.id;
-        this.position = props.position; //m
-        this.velocity = props.velocity; // m/s
-        this.e = -props.e; // has no units
-        this.mass = props.mass; //kg
-        this.radius = props.radius; //m
-        this.color = props.color;
-        this.area = (Math.PI * props.radius * props.radius) / 10000; //m^2
-        this.fixed = props.fixed;
-        this.grabbable = props.grabbable;
-    }
-
-    draw = (ctx: CanvasRenderingContext2D) => {
-        ctx.beginPath();
-        ctx.fillStyle = this.color;
-        ctx.arc(
-            this.position.x,
-            this.position.y,
-            this.radius,
-            0,
-            2 * Math.PI,
-            true
-        );
-        ctx.fill();
-        ctx.closePath();
-    };
-}
-
-export type CreatureProps = PhysicsObjectProps & {
-    emotion: CreatureEmotion;
-};
-
-class Creature extends PhysicsObject {
-    emotion: CreatureEmotion;
-
-    constructor(props: CreatureProps) {
-        super(props);
-
-        this.emotion = props.emotion;
-    }
-
-    draw = (ctx: CanvasRenderingContext2D) => {
-        ctx.beginPath();
-        ctx.fillStyle = this.color;
-        ctx.arc(
-            this.position.x,
-            this.position.y,
-            this.radius,
-            0,
-            2 * Math.PI,
-            true
-        );
-        ctx.fill();
-        ctx.closePath();
-    };
-}
 
 export default function CreaturePhysics(
     canvasRef: any,
@@ -144,6 +39,10 @@ export default function CreaturePhysics(
 
         canvas.onmousedown = mouseDown;
         canvas.onmouseup = mouseUp;
+        canvas.onmouseout = (e:any) => {
+            mouseUp(e);
+            //for (const [id, obj] of Object.entries(objects)) if (obj.grabbed) obj.bounced=true;
+        };
         canvas.onmousemove = getMousePosition;
         startInterval();
     };
@@ -185,7 +84,7 @@ export default function CreaturePhysics(
         emotion: CreatureEmotion = CreatureEmotion.Neutral
     ) => {
         const id = idCounter++;
-        const obj = new Creature({
+        const obj = new CreatureObject({
             id,
             position,
             velocity: { x: 0, y: 0 },
@@ -211,13 +110,14 @@ export default function CreaturePhysics(
         mouse.y = e.pageY - offsetY;
     };
     const mouseDown = (e: any) => {
-        if (e.which == 1) {
+        if (e.which === 1) {
             mouse.isDown = true;
         }
     };
     const mouseUp = (e: any) => {
-        if (e.which == 1) {
+        if (e.which === 1) {
             mouse.isDown = false;
+            
         }
     };
 
@@ -230,41 +130,8 @@ export default function CreaturePhysics(
         //Clear window at the begining of every frame
         ctx.clearRect(0, 0, width, height);
         for (const [id, obj] of Object.entries(objects)) {
-            if (!obj.fixed && !obj.grabbed) {
-                //physics - calculating the aerodynamic forces to drag
-                // -0.5 * Cd * A * v^2 * rho
-                let fx =
-                    -0.5 *
-                    drag *
-                    density *
-                    obj.area *
-                    obj.velocity.x *
-                    obj.velocity.x *
-                    (obj.velocity.x / Math.abs(obj.velocity.x));
-                let fy =
-                    -0.5 *
-                    drag *
-                    density *
-                    obj.area *
-                    obj.velocity.y *
-                    obj.velocity.y *
-                    (obj.velocity.y / Math.abs(obj.velocity.y));
-
-                fx = isNaN(fx) ? 0 : fx;
-                fy = isNaN(fy) ? 0 : fy;
-                //Calculating the accleration of the ball
-                //F = ma or a = F/m
-                let ax = fx / obj.mass;
-                let ay = ag * gravity + fy / obj.mass;
-
-                //Calculating the ball velocity
-                obj.velocity.x += ax * fps;
-                obj.velocity.y += ay * fps;
-
-                //Calculating the position of the ball
-                obj.position.x += obj.velocity.x * fps * 100;
-                obj.position.y += obj.velocity.y * fps * 100;
-            }
+            //Move
+            obj.move(drag,density,ag,gravity,fps);
 
             //Check if touching the mouse
             const _touchingMouse =
@@ -331,8 +198,8 @@ export default function CreaturePhysics(
     function collisionObject(b1: PhysicsObject) {
         for (const [id, b2] of Object.entries(objects)) {
             if (
-                b1.position.x != b2.position.x &&
-                b1.position.y != b2.position.y
+                b1.position.x !== b2.position.x &&
+                b1.position.y !== b2.position.y
             ) {
                 //quick check for potential collisions using AABBs
                 if (

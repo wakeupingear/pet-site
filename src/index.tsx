@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import {Helmet} from "react-helmet";
 
 import Auth from './components/Auth';
 import Home from './pages/Home';
@@ -16,6 +17,10 @@ root.render(
     <Settings>
         <Auth>
             <DialogueMapper>
+                <Helmet>
+                    <meta charSet="utf-8" />
+                    <link rel="canonical" href="http://willfarhat.com" />
+                </Helmet>
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<Home />} />

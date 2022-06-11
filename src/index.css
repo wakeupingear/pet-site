@@ -12,6 +12,157 @@ code {
     monospace;
 }
 
+h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+h2, a {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+  display: inline-block;
+  position: relative;
+  color: #0087ca;
+  font-weight: bold;
+}
+
+a:after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #0087ca;
+  transform-origin: bottom right;
+  transition: transform 0.25s ease-out;
+}
+
+a:hover:after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.shadow, .settingsModalPage {
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.frosted, .settingsModalPage {
+  backdrop-filter: blur(5px);
+}
+
+.settingsButton {
+  z-index: 100;
+  position: absolute;
+  right: 2rem;
+  top: 2rem
+}
+
+.settingsModal {
+  opacity: 0;
+  background-color: rgba(255,150,255, 0.4);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  position: fixed;
+  inset: 0px;
+}
+
+.settingsModalPage {
+  transform: translateY(100px) rotate(30deg);
+  display: flex;
+  width: min(400px, 85vw);
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  padding: 2rem;
+  padding-bottom: 0;
+  border-radius: 2rem;
+}
+
+.settingsContent {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.settingsModalPage > div {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+
+
+.settingsModalPage > a {
+  margin-bottom: 1rem;
+}
+
+.settingsModal, .settingsModalPage {
+  transition: all 180ms ease-in-out;
+}
+.settingsModal.ReactModal__Overlay--after-open {
+  opacity: 1;
+}
+.settingsModal.ReactModal__Overlay--after-open .settingsModalPage {
+  transform: translateY(0) rotate(0deg);
+}
+.settingsModal.ReactModal__Overlay--before-close {
+  opacity: 0;
+}
+.settingsModal.ReactModal__Overlay--before-close .settingsModalPage {
+  transform: translateY(100px) rotate(-30deg);
+  opacity: 0;
+}
+
+.settingsSlider {
+  width: 70%;
+}
+
+.horizontal-slider {
+  display: flex;
+  width: 100%;
+  margin: 2rem;
+}
+.example-thumb {
+  cursor: pointer;
+  position: absolute;
+  z-index: 100;
+  background: #ffffff;
+  border: 5px solid #3774ff;
+  border-radius: 100%;
+  display: block;
+  box-shadow: 0 0 2px 0 rgb(0 0 0 / 44%);
+}
+.example-thumb.active {
+  background-color: grey;
+}
+.example-track {
+  position: relative;
+  background: #ddd;
+}
+.example-track.example-track-0 {
+  background: #83a9ff;
+}
+.horizontal-slider .example-track {
+  height: 4px;
+}
+.horizontal-slider .example-thumb {
+  top: -7px;
+  width: 10px;
+  outline: none;
+  height: 10px;
+  line-height: 38px;
+}
+
 .curtainLeft, .curtainRight {
   position: fixed;
   top: 0;
@@ -53,6 +204,8 @@ code {
   background-color: rgba(0, 0, 0, 0);
   border: 1rem solid black;
   border-radius: 2rem;
+  display: flex;
+  max-width: 95%;
 }
 
 .creatureBox>div {
@@ -63,10 +216,6 @@ code {
   height: 100%;
   user-select: none;
   pointer-events: none;
-}
-
-.shadow {
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 
 .creatureBox .creatureBoxFront {
