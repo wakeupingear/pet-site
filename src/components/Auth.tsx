@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { CSSTransition } from 'react-transition-group';
+import { useSettings } from './Settings';
 
 const __DEV__ = process.env.NODE_ENV === 'development';
 const PROGRESS_URL = `progress?host=site&pathname=${window.location.pathname}`;
@@ -131,6 +132,14 @@ export default function Auth(props: Props) {
     useEffect(() => {
         if (userInfo.uid && !progress) getProgress();
     }, [userInfo]);
+
+    const { changedSettings, setChangedSettings, settings } = useSettings();
+    useEffect(() => {
+        if (changedSettings) {
+            apiPost('settings', { settings });
+            setChangedSettings(false);
+        }
+    }, [changedSettings]);
 
     return (
         <AuthContext.Provider

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import useWindowSize from '../utils/useWindowSize';
 
-import CreaturePhysics, { PhysicsFunctions } from './CreaturePhysics';
+import useCreaturePhysics, { PhysicsFunctions } from './CreaturePhysics';
 import { useSettings } from './Settings';
 
 interface CreatureBoxProps {
@@ -11,54 +11,50 @@ interface CreatureBoxProps {
 }
 
 export default function CreatureBox(props: CreatureBoxProps) {
-    const {width: screenWidth, height: screenHeight} = useWindowSize();
+    const { width: screenWidth, height: screenHeight } = useWindowSize();
     const { width, height } = props;
     const { settings } = useSettings();
-
-    const [canvasFunctions, setCanvasFunctions] =
-        useState<PhysicsFunctions | null>(null);
-
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const {
+        createCreature,
+        createObject,
+        destroy,
+        setCanvasOffset,
+        setFPS,
+        setup,
+        objList,
+    }: PhysicsFunctions = useCreaturePhysics(canvasRef.current, 0.47, 1.22, 1);
+
     useEffect(() => {
-        let functions: PhysicsFunctions;
-        if (canvasRef.current && !canvasFunctions) {
-            functions = CreaturePhysics(canvasRef.current, 0.47, 1.22, 1);
-            functions.setup();
-            functions.createCreature();
-            setCanvasFunctions(functions);
+        if (canvasRef.current) {
+            setup(canvasRef.current);
+            createCreature();
         }
 
         return () => {
-            if (functions) {
-                functions.destroy();
-            }
+            destroy();
         };
     }, [canvasRef]);
 
     useEffect(() => {
-        if (canvasFunctions) {
-            canvasFunctions.setFPS(settings.fps);
-        }
-    }, [settings, canvasFunctions]);
+        setFPS(settings.fps);
+    }, [settings]);
 
     const boxRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
-        if (canvasFunctions && boxRef.current) {
+        if (boxRef.current) {
             const { offsetTop, offsetLeft } = boxRef.current;
-            canvasFunctions.setCanvasOffset(offsetLeft, offsetTop);
+            setCanvasOffset(offsetLeft, offsetTop);
         }
-    }, [canvasFunctions, boxRef, screenWidth, screenHeight]);
+    }, [boxRef, screenWidth, screenHeight]);
 
     return (
         <div
-            className={'creatureBox shadow creatureBox' + props.variant}
+            className={'creatureBox creatureBox' + props.variant}
             style={{ width, height }}
             ref={boxRef}
         >
-            <div
-                className="creatureBoxBack"
-                onClick={(e) => e.preventDefault()}
-            />
+            <div className="creatureBoxBack" />
             <canvas
                 className="creatureCanvas"
                 width={width || '900'}
@@ -67,10 +63,10 @@ export default function CreatureBox(props: CreatureBoxProps) {
             >
                 Where tf is the JS tho
             </canvas>
-            <div
-                className="creatureBoxFront"
-                onClick={(e) => e.preventDefault()}
-            />
+            {Object.keys(objList).map((id) => {
+                return objList[id].render();
+            })}
+            <div className="creatureBoxFront" />
         </div>
     );
 }

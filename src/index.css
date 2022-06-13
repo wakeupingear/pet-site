@@ -1,223 +1,314 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+        'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+        'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+        monospace;
 }
 
 h1 {
-  font-size: 2.5rem;
-  margin: 0;
+    font-size: 2.5rem;
+    margin: 0;
 }
 
-h2, a {
-  font-size: 1.5rem;
-  margin: 0;
+h2,
+a {
+    font-size: 1.5rem;
+    margin: 0;
 }
 
 a {
-  text-decoration: none;
-  display: inline-block;
-  position: relative;
-  color: #0087ca;
-  font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    position: relative;
+    color: #0087ca;
+    font-weight: bold;
 }
 
 a:after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  transform: scaleX(0);
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-color: #0087ca;
-  transform-origin: bottom right;
-  transition: transform 0.25s ease-out;
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #0087ca;
+    transform-origin: bottom right;
+    transition: transform 0.25s ease-out;
 }
 
 a:hover:after {
-  transform: scaleX(1);
-  transform-origin: bottom left;
+    transform: scaleX(1);
+    transform-origin: bottom left;
 }
 
-.shadow, .settingsModalPage {
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+.shadow,
+.modalPage {
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 
-.frosted, .settingsModalPage {
-  backdrop-filter: blur(5px);
+.frosted,
+.modalPage {
+    backdrop-filter: blur(5px);
 }
 
 .settingsButton {
-  z-index: 100;
-  position: absolute;
-  right: 2rem;
-  top: 2rem
+    @apply absolute right-8 top-8 z-10;
+}
+
+.settingsButton > div {
+    @apply flex h-5 w-5 bg-black;
+    @apply transition-all duration-200 ease-in-out;
+}
+
+.settingsButton:not(.settingsHidden) {
+    @apply hover:cursor-pointer;
+}
+
+.settingsButton:not(.settingsHidden):hover > div {
+    @apply rotate-90 scale-150;
+}
+
+.settingsHidden > div {
+    @apply scale-0;
+}
+
+.modal {
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+    position: fixed;
+    inset: 0px;
 }
 
 .settingsModal {
-  opacity: 0;
-  background-color: rgba(255,150,255, 0.4);
-  display: flex;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  overflow: hidden;
-  position: fixed;
-  inset: 0px;
+    background-color: rgba(255, 150, 255, 0.4);
+}
+
+.modalPage {
+    transform: translateY(100px) rotate(30deg);
+    display: flex;
+    width: min(400px, 85vw);
+    flex-direction: column;
+    align-items: center;
+    background-color: white;
+    border-radius: 2rem;
 }
 
 .settingsModalPage {
-  transform: translateY(100px) rotate(30deg);
-  display: flex;
-  width: min(400px, 85vw);
-  flex-direction: column;
-  align-items: center;
-  background-color: white;
-  padding: 2rem;
-  padding-bottom: 0;
-  border-radius: 2rem;
+    padding: 2rem;
+    padding-bottom: 0;
 }
 
 .settingsContent {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
 }
 
 .settingsModalPage > div {
-  display: flex;
-  width: 100%;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
 }
-
 
 .settingsModalPage > a {
-  margin-bottom: 1rem;
+    margin-bottom: 1rem;
 }
 
-.settingsModal, .settingsModalPage {
-  transition: all 180ms ease-in-out;
+.modal,
+.modalPage {
+    transition: all 180ms ease-in-out;
 }
-.settingsModal.ReactModal__Overlay--after-open {
-  opacity: 1;
+
+.modal.ReactModal__Overlay--after-open {
+    opacity: 1;
 }
-.settingsModal.ReactModal__Overlay--after-open .settingsModalPage {
-  transform: translateY(0) rotate(0deg);
+
+.modal.ReactModal__Overlay--after-open .modalPage {
+    transform: translateY(0) rotate(0deg);
 }
-.settingsModal.ReactModal__Overlay--before-close {
-  opacity: 0;
+
+.modal.ReactModal__Overlay--before-close {
+    opacity: 0;
 }
-.settingsModal.ReactModal__Overlay--before-close .settingsModalPage {
-  transform: translateY(100px) rotate(-30deg);
-  opacity: 0;
+
+.modal.ReactModal__Overlay--before-close .modalPage {
+    transform: translateY(100px) rotate(-30deg);
+    opacity: 0;
 }
 
 .settingsSlider {
-  width: 70%;
+    width: 70%;
 }
 
 .horizontal-slider {
-  display: flex;
-  width: 100%;
-  margin: 2rem;
-}
-.example-thumb {
-  cursor: pointer;
-  position: absolute;
-  z-index: 100;
-  background: #ffffff;
-  border: 5px solid #3774ff;
-  border-radius: 100%;
-  display: block;
-  box-shadow: 0 0 2px 0 rgb(0 0 0 / 44%);
-}
-.example-thumb.active {
-  background-color: grey;
-}
-.example-track {
-  position: relative;
-  background: #ddd;
-}
-.example-track.example-track-0 {
-  background: #83a9ff;
-}
-.horizontal-slider .example-track {
-  height: 4px;
-}
-.horizontal-slider .example-thumb {
-  top: -7px;
-  width: 10px;
-  outline: none;
-  height: 10px;
-  line-height: 38px;
+    display: flex;
+    width: 100%;
+    margin: 2rem;
 }
 
-.curtainLeft, .curtainRight {
-  position: fixed;
-  top: 0;
-  width: 50%;
-  height: 100%;
-  background-color: rgba(255, 0, 0, 1);
-  z-index: 10;
-  transition: 300ms;
+.example-thumb {
+    cursor: pointer;
+    position: absolute;
+    z-index: 100;
+    background: #ffffff;
+    border: 5px solid #3774ff;
+    border-radius: 100%;
+    display: block;
+    box-shadow: 0 0 2px 0 rgb(0 0 0 / 44%);
+}
+
+.example-thumb.active {
+    background-color: grey;
+}
+
+.example-track {
+    position: relative;
+    background: #ddd;
+}
+
+.example-track.example-track-0 {
+    background: #83a9ff;
+}
+
+.horizontal-slider .example-track {
+    height: 4px;
+}
+
+.horizontal-slider .example-thumb {
+    top: -7px;
+    width: 10px;
+    outline: none;
+    height: 10px;
+    line-height: 38px;
+}
+
+.curtainLeft,
+.curtainRight {
+    position: fixed;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background-color: rgba(255, 0, 0, 1);
+    z-index: 10;
+    transition: 300ms;
 }
 
 .curtainLeft {
-  left: 0;
+    left: 0;
 }
 
 .curtainRight {
-  right: 0;
+    right: 0;
 }
 
-.curtainHolder-exit>*, .curtainHolder-exit-done>* {
-  width: 0;
+.curtainHolder-exit > *,
+.curtainHolder-exit-done > * {
+    width: 0;
 }
 
 .page {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  transition: 300ms;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: 300ms;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .creatureBox {
-  position: relative;
-  background-color: rgba(0, 0, 0, 0);
-  border: 1rem solid black;
-  border-radius: 2rem;
-  display: flex;
-  max-width: 95%;
+    position: relative;
+    display: flex;
 }
 
-.creatureBox>div {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  user-select: none;
-  pointer-events: none;
+.creatureBoxBack,
+.creatureBoxFront {
+    @apply pointer-events-none select-none;
 }
 
-.creatureBox .creatureBoxFront {
-  background-color: rgba(0, 0, 255, 0.2);
+.creatureBox > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    user-select: none;
+}
+
+.physicsObject {
+    @apply absolute translate-x-[-50%] translate-y-[-50%];
+    @apply flex h-[100%] w-[100%] justify-center align-middle;
+    @apply bg-red-500 text-center;
+    @apply select-all;
+    @apply rounded-[100%];
+}
+
+.creatureEyebox {
+    @apply absolute flex flex-row;
+}
+
+.creatureEyeNeutral,
+.creatureEyeNeutral * {
+    @apply delay-1000 duration-100;
+}
+
+.creatureEye {
+    @apply overflow-hidden rounded-[100%] bg-white;
+    @apply border-4 border-black;
+    @apply m-4 flex justify-center align-middle;
+    @apply relative;
+}
+
+.creatureEyeball {
+    @apply absolute flex h-3/4 w-3/4 rounded-[50%];
+    @apply translate-x-[-50%] translate-y-[-50%] bg-black;
+    @apply left-[35%] top-[45%];
+}
+
+.creatureEye:first-child .creatureEyeball {
+    @apply left-[65%];
+}
+
+.creatureTag {
+    @apply pointer-events-auto z-50 select-none hover:cursor-pointer;
+    @apply flex h-min w-min;
+}
+
+.backstreetCovered {
+    width: 100%;
+    height: 100%;
+}
+
+.backstreetTarget {
+    background-color: #000000;
+    width: 10rem;
+    height: 10rem;
+}
+
+.backstreetTarget:hover {
+    cursor: pointer;
 }

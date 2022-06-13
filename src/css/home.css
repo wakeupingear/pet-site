@@ -1,0 +1,4 @@
+.creatureBox {
+    @apply rounded-3xl border-8 border-solid border-black bg-transparent;
+    @apply max-w-[95%] shadow-lg;
+}

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import {Helmet} from "react-helmet";
+import { Helmet } from 'react-helmet';
+import '../css/home.css';
 
 import { useAuth } from '../components/Auth';
 import CreatureBox from '../components/CreatureBox';
@@ -38,9 +39,7 @@ export default function Home() {
     return (
         <div className="page">
             <Helmet>
-                <meta charSet="utf-8" />
                 <title>pet shop</title>
-                <link rel="canonical" href="http://mysite.com/example" />
             </Helmet>
             <CreatureBox variant="Window" />
         </div>

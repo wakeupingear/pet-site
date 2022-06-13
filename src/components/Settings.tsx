@@ -1,11 +1,13 @@
-import { useState, createContext, useContext } from 'react';
+import { useState, createContext, useContext, useEffect } from 'react';
 import Modal from 'react-modal';
-import Switch from "react-switch";
-import ReactSlider from 'react-slider'
+import Switch from 'react-switch';
+import ReactSlider from 'react-slider';
 
 export const SettingsContext = createContext({} as SettingsContextProps);
 
 interface SettingsContextProps {
+    changedSettings: boolean;
+    setChangedSettings: React.Dispatch<React.SetStateAction<boolean>>;
     settings: Settings;
     setSettings: React.Dispatch<React.SetStateAction<Settings>>;
 }
@@ -22,38 +24,51 @@ interface Settings {
 Modal.setAppElement('#root');
 
 export default function Settings(props: Props) {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     const [settings, setSettings] = useState<Settings>({
         fps: 60,
-        volume: 100
+        volume: 100,
     });
     const [changed, setChanged] = useState(false);
+    const [changedSettings, setChangedSettings] = useState(false);
 
     const updateSettings = (change: Partial<Settings>) => {
-        setSettings(current => {
+        setSettings((current) => {
             return {
                 ...current,
-                ...change
+                ...change,
             };
         });
-    }
-
-    const uploadSetttings = async () => {
-
-    }
+    };
 
     const openModal = () => setOpen(true);
     const closeModal = () => {
         setOpen(false);
         if (changed) {
-            uploadSetttings();
+            setChangedSettings(true);
             setChanged(false);
         }
-    }
+    };
+
+    useEffect(() => {
+        if (open) setChanged(true);
+    }, [settings]);
 
     return (
-        <SettingsContext.Provider value={{ settings, setSettings }}>
-            <button className='settingsButton' onClick={openModal}>settings</button>
+        <SettingsContext.Provider
+            value={{
+                changedSettings,
+                setChangedSettings,
+                settings,
+                setSettings,
+            }}
+        >
+            <div
+                className={'settingsButton ' + (open && 'settingsHidden')}
+                onClick={openModal}
+            >
+                <div />
+            </div>
             <Modal
                 isOpen={open}
                 onRequestClose={closeModal}
@@ -61,23 +76,28 @@ export default function Settings(props: Props) {
                 closeTimeoutMS={120}
                 shouldCloseOnOverlayClick
                 shouldCloseOnEsc
-                overlayClassName="settingsModal"
-                className="settingsModalPage"
+                overlayClassName="modal settingsModal"
+                className="modalPage settingsModalPage"
             >
                 <h1>settings</h1>
-                <div className='settingsContent'>
+                <div className="settingsContent">
                     <h2>vol</h2>
-                    <div className='settingsSlider'>
+                    <div className="settingsSlider">
                         <ReactSlider
+                            defaultValue={settings.volume}
                             className="horizontal-slider"
                             thumbClassName="example-thumb"
                             trackClassName="example-track"
-                            onAfterChange={(volume) => updateSettings({volume})}
-                            renderTrack={(props, state) => <div {...props} />}//custom track
+                            onAfterChange={(volume) =>
+                                updateSettings({ volume })
+                            }
+                            renderTrack={(props, state) => <div {...props} />} //custom track
                         />
                     </div>
                 </div>
-                <a href='willfarhat.com' target="_blank">will farhat</a>
+                <a href="willfarhat.com" target="_blank">
+                    will farhat
+                </a>
             </Modal>
             {props.children}
         </SettingsContext.Provider>

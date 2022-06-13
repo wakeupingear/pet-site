@@ -1,5 +1,14 @@
-import PhysicsObject, {Vec2} from "../utils/physics/PhysicsObject";
-import CreatureObject, {CreatureEmotion} from "../utils/physics/CreatureObject";
+import { useState } from 'react';
+
+import { PhysicsObject, Vec2 } from '../utils/physics/PhysicsObject';
+import {
+    CreatureObject,
+    CreatureEmotion,
+} from '../utils/physics/CreatureObject';
+
+interface ObjEntries {
+    [key: string]: PhysicsObject;
+}
 
 export type PhysicsFunctions = {
     createCreature: (position?: Vec2, emotion?: CreatureEmotion) => number;
@@ -7,31 +16,40 @@ export type PhysicsFunctions = {
     destroy: () => void;
     setCanvasOffset: (x: number, y: number) => void;
     setFPS: (fps: number) => void;
-    setup: () => void;
+    setup: (ref: HTMLCanvasElement) => void;
+    objList: ObjEntries;
 };
 
-export default function CreaturePhysics(
+export interface MouseData extends Vec2 {
+    down: boolean;
+    inCanvas: boolean;
+}
+
+let canvas: any = null;
+let ctx: any = null;
+let fps = 1 / 30; //30 FPS
+let timer: NodeJS.Timer | null = null;
+let mouse = {} as MouseData;
+let ag = 9.81; //m/s^2 acceleration due to gravity on earth = 9.81 m/s^2.
+let width = 0;
+let height = 0;
+let offsetX = 0,
+    offsetY = 0;
+let objects: ObjEntries = {};
+let idCounter = 0;
+
+export default function useCreaturePhysics(
     canvasRef: any,
     drag: number,
     density: number,
     gravity: number
 ): PhysicsFunctions {
-    let canvas: any = null;
-    let ctx: any = null;
-    let fps = 1 / 30; //30 FPS
-    let timer: NodeJS.Timer | null = null;
-    let mouse = { x: 0, y: 0, isDown: false };
-    let ag = 9.81; //m/s^2 acceleration due to gravity on earth = 9.81 m/s^2.
-    let width = 0;
-    let height = 0;
-    let offsetX = 0,
-        offsetY = 0;
-    let objects: { [key: string]: PhysicsObject } = {};
+    const [objList, setObjList] = useState<{ [key: string]: PhysicsObject }>(
+        objects
+    );
 
-    let idCounter = 0;
-
-    const setup = () => {
-        canvas = canvasRef;
+    const setup = (ref = canvasRef) => {
+        canvas = ref;
         if (!canvas) return;
         ctx = canvas.getContext('2d');
         width = canvas.width;
@@ -39,9 +57,12 @@ export default function CreaturePhysics(
 
         canvas.onmousedown = mouseDown;
         canvas.onmouseup = mouseUp;
-        canvas.onmouseout = (e:any) => {
+        canvas.onmouseout = (e: any) => {
             mouseUp(e);
-            //for (const [id, obj] of Object.entries(objects)) if (obj.grabbed) obj.bounced=true;
+            mouse.inCanvas = false;
+        };
+        canvas.onmousein = (e: any) => {
+            mouse.inCanvas = true;
         };
         canvas.onmousemove = getMousePosition;
         startInterval();
@@ -74,6 +95,7 @@ export default function CreaturePhysics(
             color,
             fixed,
             grabbable,
+            fps,
         });
         objects[id] = obj;
         return id;
@@ -94,6 +116,7 @@ export default function CreaturePhysics(
             color: '#0000FF',
             fixed: false,
             grabbable: true,
+            fps,
             emotion,
         });
         objects[id] = obj;
@@ -106,18 +129,18 @@ export default function CreaturePhysics(
     };
 
     const getMousePosition = (e: MouseEvent) => {
+        mouse.inCanvas = true;
         mouse.x = e.pageX - offsetX;
         mouse.y = e.pageY - offsetY;
     };
     const mouseDown = (e: any) => {
         if (e.which === 1) {
-            mouse.isDown = true;
+            mouse.down = true;
         }
     };
     const mouseUp = (e: any) => {
         if (e.which === 1) {
-            mouse.isDown = false;
-            
+            mouse.down = false;
         }
     };
 
@@ -130,8 +153,11 @@ export default function CreaturePhysics(
         //Clear window at the begining of every frame
         ctx.clearRect(0, 0, width, height);
         for (const [id, obj] of Object.entries(objects)) {
+            //Pass mouse to every object
+            obj.mouse = mouse;
+
             //Move
-            obj.move(drag,density,ag,gravity,fps);
+            obj.move(drag, density, ag, gravity);
 
             //Check if touching the mouse
             const _touchingMouse =
@@ -141,7 +167,7 @@ export default function CreaturePhysics(
             if (obj.grabbable) {
                 if (_touchingMouse || obj.grabbed) {
                     document.body.style.cursor = 'pointer';
-                    if (mouse.isDown) {
+                    if (mouse.down) {
                         obj.velocity = { x: 0, y: 0 };
                         if (!obj.grabbed) {
                             obj.grabbed = true;
@@ -151,7 +177,7 @@ export default function CreaturePhysics(
                     }
                     const _grabX = mouse.x - obj.grabX;
                     const _grabY = mouse.y - obj.grabY;
-                    if (!mouse.isDown) {
+                    if (!mouse.down) {
                         if (obj.grabbed) {
                             obj.velocity = {
                                 x: _grabX - obj.position.x,
@@ -175,6 +201,9 @@ export default function CreaturePhysics(
             collisionObject(obj);
             collisionWall(obj);
         }
+
+        //Update the state
+        setObjList({ ...objects });
     };
 
     function collisionWall(ball: PhysicsObject) {
@@ -262,6 +291,8 @@ export default function CreaturePhysics(
 
     const setFPS = (newFPS: number) => {
         fps = 1 / newFPS;
+        for (const [id, obj] of Object.entries(objects)) obj.fps = fps;
+
         startInterval();
     };
 
@@ -272,5 +303,6 @@ export default function CreaturePhysics(
         setCanvasOffset,
         setFPS,
         setup,
+        objList,
     };
 }

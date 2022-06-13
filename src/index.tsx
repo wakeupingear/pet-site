@@ -3,12 +3,13 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import {Helmet} from "react-helmet";
+import { Helmet } from 'react-helmet';
 
 import Auth from './components/Auth';
 import Home from './pages/Home';
 import DialogueMapper from './components/DialogueMapper';
 import Settings from './components/Settings';
+import Backstreet from './pages/Backstreet';
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -24,6 +25,7 @@ root.render(
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<Home />} />
+                        <Route path="*" element={<Backstreet />} />
                     </Routes>
                 </BrowserRouter>
             </DialogueMapper>
