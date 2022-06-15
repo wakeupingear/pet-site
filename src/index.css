@@ -201,6 +201,29 @@ a:hover:after {
     line-height: 38px;
 }
 
+input {
+  @apply text-center;
+  @apply border-2 rounded-lg;
+}
+
+.formModalPage > * {
+  @apply m-2;
+}
+
+.button {
+  @apply transition-all opacity-20;
+  @apply bg-gray-300 p-3 min-w-[5rem] rounded-xl;
+}
+.buttonActive {
+  @apply opacity-100 bg-blue-300 shadow-sm;
+  @apply hover:cursor-pointer;
+  background-image: linear-gradient(to right, orange);
+  background-position: 0% 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  @apply hover:bg-[length:100%]
+}
+
 .curtainLeft,
 .curtainRight {
     position: fixed;

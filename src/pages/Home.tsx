@@ -5,6 +5,7 @@ import '../css/home.css';
 import { useAuth } from '../components/Auth';
 import CreatureBox from '../components/CreatureBox';
 import { useDialogueMapper } from '../components/DialogueMapper';
+import LoginPopup from '../components/LoginPopup';
 
 export default function Home() {
     const {} = useAuth();
@@ -41,6 +42,7 @@ export default function Home() {
             <Helmet>
                 <title>pet shop</title>
             </Helmet>
+            <LoginPopup open={true} type={"join"}/>
             <CreatureBox variant="Window" />
         </div>
     );

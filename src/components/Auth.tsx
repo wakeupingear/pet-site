@@ -41,6 +41,7 @@ const processResponse = async (response: Response): Promise<APIResponse> => {
         };
     }
     returnData.status = response.status;
+    console.log(returnData)
     return returnData;
 };
 
