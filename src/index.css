@@ -64,7 +64,7 @@ a:hover:after {
 }
 
 .settingsButton {
-    @apply absolute right-8 top-8 z-10;
+    @apply absolute right-8 top-8 z-[10];
 }
 
 .settingsButton > div {
@@ -95,6 +95,7 @@ a:hover:after {
     overflow: hidden;
     position: fixed;
     inset: 0px;
+    z-index: 50;
 }
 
 .settingsModal {
@@ -202,26 +203,57 @@ a:hover:after {
 }
 
 input {
-  @apply text-center;
-  @apply border-2 rounded-lg;
+    @apply text-center;
+    @apply rounded-lg border-2;
+}
+
+.formModalPage {
+    @apply transition-[width] transition-[height] duration-200 ease-in-out;
 }
 
 .formModalPage > * {
-  @apply m-2;
+    @apply m-2;
+}
+
+@keyframes buttonShake {
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
 }
 
 .button {
-  @apply transition-all opacity-20;
-  @apply bg-gray-300 p-3 min-w-[5rem] rounded-xl;
+    @apply select-none opacity-30 transition-all;
+    @apply min-w-[5rem] rounded-xl bg-gray-300 p-3;
 }
-.buttonActive {
-  @apply opacity-100 bg-blue-300 shadow-sm;
-  @apply hover:cursor-pointer;
-  background-image: linear-gradient(to right, orange);
-  background-position: 0% 100%;
-  background-repeat: no-repeat;
-  background-size: 0% 100%;
-  @apply hover:bg-[length:100%]
+.buttonActive:not(.buttonError) {
+    @apply bg-blue-300 opacity-100 shadow-sm;
+    @apply hover:cursor-pointer;
+    background-image: linear-gradient(to right, orange);
+    background-position: 0% 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    @apply hover:bg-[length:100%];
+}
+.buttonError {
+    @apply bg-red-300 opacity-100 shadow-sm;
+    animation: buttonShake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 .curtainLeft,

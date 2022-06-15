@@ -3,18 +3,22 @@ import { CSSTransition } from 'react-transition-group';
 import { useSettings } from './Settings';
 
 const __DEV__ = process.env.NODE_ENV === 'development';
-const PROGRESS_URL = `progress?host=site&pathname=${window.location.pathname}`;
+const PROGRESS_URL = `/progress?host=site&pathname=${window.location.pathname}`;
+const STORAGE_VERSION = 1;
 
 //Context
 export const AuthContext = createContext({} as AuthContextProps);
 
 export type UserInfo = {
-    uid: string;
+    sessionToken: string;
     name: string;
     email: string;
+    version: number;
 };
 
 interface AuthContextProps {
+    apiGet: (url: string) => Promise<APIResponse>;
+    apiPost: (url: string, data: any) => Promise<APIResponse>;
     getProgress: () => void;
     userInfo: UserInfo;
     progress: string | null;
@@ -23,8 +27,8 @@ interface AuthContextProps {
 }
 
 const apiUrl = __DEV__
-    ? 'http://localhost:5000/'
-    : 'https://pet-site-api.herokuapp.com/';
+    ? 'http://localhost:5000'
+    : 'https://pet-site-api.herokuapp.com';
 
 interface APIResponse {
     status: number;
@@ -41,7 +45,6 @@ const processResponse = async (response: Response): Promise<APIResponse> => {
         };
     }
     returnData.status = response.status;
-    console.log(returnData)
     return returnData;
 };
 
@@ -52,20 +55,33 @@ interface Props {
 export default function Auth(props: Props) {
     const [progress, updateProgress] = useState<string | null>(null);
     const [loading, setLoading] = useState(true); //for curtain
-    const [userInfo, setUserInfo] = useState<UserInfo>(
-        localStorage.getItem('userInfo')
-            ? JSON.parse(localStorage.getItem('userInfo') || '')
-            : { uid: 'empty', name: '', email: '' }
-    );
+    const [userInfo, setUserInfo] = useState<UserInfo>({
+        sessionToken: 'empty',
+        name: '',
+        email: '',
+        version: STORAGE_VERSION,
+    });
+
+    useEffect(() => {
+        const userInfoRaw = localStorage.getItem('userInfo');
+        const userInfoParsed = JSON.parse(userInfoRaw || '{}');
+        if (!userInfoRaw || userInfoParsed.version !== STORAGE_VERSION) {
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+            return;
+        }
+        if (userInfoParsed.version === STORAGE_VERSION)
+            setUserInfo(userInfoParsed);
+    }, []);
 
     const updateUserInfo = (userInfo: Partial<UserInfo>) => {
         setUserInfo((info) => {
-            return {
+            const newInfo = {
                 ...info,
                 ...userInfo,
             };
+            localStorage.setItem('userInfo', JSON.stringify(newInfo));
+            return newInfo;
         });
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
     };
 
     const apiGet = async (path: string, options = {}) => {
@@ -76,7 +92,7 @@ export default function Auth(props: Props) {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    Authorization: userInfo.uid || '',
+                    Authorization: userInfo.sessionToken || '',
                 },
             });
             return await processResponse(response);
@@ -97,7 +113,7 @@ export default function Auth(props: Props) {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    Authorization: userInfo.uid || '',
+                    Authorization: userInfo.sessionToken || '',
                 },
             });
             return await processResponse(response);
@@ -131,13 +147,13 @@ export default function Auth(props: Props) {
     };
 
     useEffect(() => {
-        if (userInfo.uid && !progress) getProgress();
+        if (userInfo.sessionToken && !progress) getProgress();
     }, [userInfo]);
 
     const { changedSettings, setChangedSettings, settings } = useSettings();
     useEffect(() => {
         if (changedSettings) {
-            apiPost('settings', { settings });
+            apiPost('/settings', { settings });
             setChangedSettings(false);
         }
     }, [changedSettings]);
@@ -145,6 +161,8 @@ export default function Auth(props: Props) {
     return (
         <AuthContext.Provider
             value={{
+                apiGet,
+                apiPost,
                 getProgress,
                 progress,
                 setProgress,
