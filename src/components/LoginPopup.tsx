@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Modal from 'react-modal';
+import useDigitInput from 'react-digit-input';
 
 import { useAuth } from './Auth';
 import Button from './Button';
@@ -64,6 +65,37 @@ export default function LoginPopup(props: Props) {
 
     const passwordInputType = showPassword ? 'text' : 'password';
 
+    const [code, onChange] = useState('');
+    const digits = useDigitInput({
+        acceptedCharacters: /^[0-9]$/,
+        length: 6,
+        value: code,
+        onChange,
+    });
+
+    const checkCode = async (code: string) => {
+        const numCode = Number(code);
+        if (numCode < 100000) return;
+        setLoading(RequestStatus.Loading);
+        const response = await apiPost('/signup/code', {
+            email,
+            code: numCode,
+        });
+        console.log(response);
+        if (response.status === 200) {
+            setLoading(RequestStatus.Success);
+            updateUserInfo({
+                sessionToken: response.sessionToken,
+            });
+        } else {
+            setLoading(RequestStatus.Error);
+        }
+    };
+
+    useEffect(() => {
+        checkCode(code);
+    }, [code]);
+
     return (
         <Modal
             isOpen={props.open}
@@ -105,6 +137,21 @@ export default function LoginPopup(props: Props) {
             ) : (
                 <>
                     <h1>check ur email</h1>
+                    <div>
+                        <div className="digitInput">
+                            <input
+                                inputMode="decimal"
+                                autoFocus
+                                {...digits[0]}
+                            />
+                            <input inputMode="decimal" {...digits[1]} />
+                            <input inputMode="decimal" {...digits[2]} />
+                            <span className="hyphen" />
+                            <input inputMode="decimal" {...digits[3]} />
+                            <input inputMode="decimal" {...digits[4]} />
+                            <input inputMode="decimal" {...digits[5]} />
+                        </div>
+                    </div>
                     <Button
                         onClick={() =>
                             updateUserInfo({ sessionToken: 'empty' })

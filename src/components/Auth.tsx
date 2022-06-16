@@ -56,11 +56,18 @@ export default function Auth(props: Props) {
     const [progress, updateProgress] = useState<string | null>(null);
     const [loading, setLoading] = useState(true); //for curtain
     const [userInfo, setUserInfo] = useState<UserInfo>({
-        sessionToken: 'empty',
+        sessionToken: '',
         name: '',
         email: '',
         version: STORAGE_VERSION,
     });
+
+    const isActiveSession = () =>
+        Boolean(
+            userInfo.sessionToken &&
+                userInfo.sessionToken !== 'empty' &&
+                userInfo.sessionToken !== 'waiting'
+        );
 
     useEffect(() => {
         const userInfoRaw = localStorage.getItem('userInfo');
@@ -131,7 +138,11 @@ export default function Auth(props: Props) {
             if (response.status === 200) {
                 updateProgress(response.progress);
             } else if (response.status === 201) {
-                updateProgress('newUser');
+                if (!userInfo.sessionToken) {
+                    updateProgress('newUser');
+                } else if (isActiveSession()) {
+                    updateUserInfo({ sessionToken: 'empty' });
+                }
             }
 
             if (!__DEV__) setTimeout(() => setLoading(false), 400);
@@ -147,7 +158,11 @@ export default function Auth(props: Props) {
     };
 
     useEffect(() => {
-        if (userInfo.sessionToken && !progress) getProgress();
+        if (
+            (isActiveSession() || (loading && userInfo.sessionToken)) &&
+            !progress
+        )
+            getProgress();
     }, [userInfo]);
 
     const { changedSettings, setChangedSettings, settings } = useSettings();

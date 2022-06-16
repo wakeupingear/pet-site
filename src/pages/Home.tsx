@@ -8,7 +8,7 @@ import { useDialogueMapper } from '../components/DialogueMapper';
 import LoginPopup from '../components/LoginPopup';
 
 export default function Home() {
-    const {} = useAuth();
+    const { userInfo } = useAuth();
     const { setDomInteractions } = useDialogueMapper();
 
     useEffect(() => {
@@ -42,7 +42,10 @@ export default function Home() {
             <Helmet>
                 <title>pet shop</title>
             </Helmet>
-            <LoginPopup open={true} type={"join"}/>
+            {(userInfo.sessionToken === 'empty' ||
+                userInfo.sessionToken === 'waiting') && (
+                <LoginPopup open={true} type={'join'} />
+            )}
             <CreatureBox variant="Window" />
         </div>
     );

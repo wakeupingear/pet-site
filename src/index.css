@@ -256,6 +256,15 @@ input {
     animation: buttonShake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+.digitInput {
+    @apply flex flex-row;
+    @apply justify-center align-middle;
+}
+.digitInput input {
+    @apply m-2 h-[length:3rem] w-[length:3rem];
+    @apply rounded-lg border-2 border-gray-300;
+}
+
 .curtainLeft,
 .curtainRight {
     position: fixed;
