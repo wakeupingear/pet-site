@@ -81,7 +81,6 @@ export default function LoginPopup(props: Props) {
             email,
             code: numCode,
         });
-        console.log(response);
         if (response.status === 200) {
             setLoading(RequestStatus.Success);
             updateUserInfo({
@@ -146,7 +145,6 @@ export default function LoginPopup(props: Props) {
                             />
                             <input inputMode="decimal" {...digits[1]} />
                             <input inputMode="decimal" {...digits[2]} />
-                            <span className="hyphen" />
                             <input inputMode="decimal" {...digits[3]} />
                             <input inputMode="decimal" {...digits[4]} />
                             <input inputMode="decimal" {...digits[5]} />

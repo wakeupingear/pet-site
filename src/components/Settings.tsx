@@ -1,7 +1,10 @@
+import { userInfo } from 'os';
 import { useState, createContext, useContext, useEffect } from 'react';
 import Modal from 'react-modal';
-import Switch from 'react-switch';
 import ReactSlider from 'react-slider';
+import Button from './Button';
+
+import { internal_apiGet, __DEV__ } from '../utils/api';
 
 export const SettingsContext = createContext({} as SettingsContextProps);
 
@@ -9,7 +12,7 @@ interface SettingsContextProps {
     changedSettings: boolean;
     setChangedSettings: React.Dispatch<React.SetStateAction<boolean>>;
     settings: Settings;
-    setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+    updateSettings: (change: Partial<Settings>) => void;
 }
 
 interface Props {
@@ -54,13 +57,24 @@ export default function Settings(props: Props) {
         if (open) setChanged(true);
     }, [settings]);
 
+    const resetServer = async () => {
+        const response = await internal_apiGet(
+            '/admin/reset',
+            'foojardigibutterjoe'
+        );
+        console.log(response);
+        if (response.status === 200) {
+            window.location.reload();
+        }
+    };
+
     return (
         <SettingsContext.Provider
             value={{
                 changedSettings,
                 setChangedSettings,
                 settings,
-                setSettings,
+                updateSettings,
             }}
         >
             <div
@@ -81,19 +95,26 @@ export default function Settings(props: Props) {
             >
                 <h1>settings</h1>
                 <div className="settingsContent">
-                    <h2>vol</h2>
-                    <div className="settingsSlider">
-                        <ReactSlider
-                            defaultValue={settings.volume}
-                            className="horizontal-slider"
-                            thumbClassName="example-thumb"
-                            trackClassName="example-track"
-                            onAfterChange={(volume) =>
-                                updateSettings({ volume })
-                            }
-                            renderTrack={(props, state) => <div {...props} />} //custom track
-                        />
+                    <div>
+                        <h2>vol</h2>
+                        <div className="settingsSlider">
+                            <ReactSlider
+                                defaultValue={settings.volume}
+                                className="horizontal-slider"
+                                thumbClassName="example-thumb"
+                                trackClassName="example-track"
+                                onAfterChange={(volume) =>
+                                    updateSettings({ volume })
+                                }
+                                renderTrack={(props, state) => (
+                                    <div {...props} />
+                                )}
+                            />
+                        </div>
                     </div>
+                    {__DEV__ && (
+                        <Button onClick={resetServer}>Reset Server</Button>
+                    )}
                 </div>
                 <a href="willfarhat.com" target="_blank">
                     will farhat

@@ -1,8 +1,16 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { CSSTransition } from 'react-transition-group';
-import { useSettings } from './Settings';
 
-const __DEV__ = process.env.NODE_ENV === 'development';
+import LoginPopup from '../components/LoginPopup';
+import { useSettings } from './Settings';
+import LoadingScreen from './LoadingScreen';
+import {
+    internal_apiGet,
+    internal_apiPost,
+    APIResponse,
+    __DEV__,
+} from '../utils/api';
+
 const PROGRESS_URL = `/progress?host=site&pathname=${window.location.pathname}`;
 const STORAGE_VERSION = 1;
 
@@ -26,35 +34,19 @@ interface AuthContextProps {
     updateUserInfo: (userInfo: Partial<UserInfo>) => void;
 }
 
-const apiUrl = __DEV__
-    ? 'http://localhost:5000'
-    : 'https://pet-site-api.herokuapp.com';
-
-interface APIResponse {
-    status: number;
-    [key: string]: any;
-}
-
-const processResponse = async (response: Response): Promise<APIResponse> => {
-    let returnData: any = {};
-    if (response.ok) {
-        returnData = await response.json();
-    } else {
-        returnData = {
-            error: response.statusText,
-        };
-    }
-    returnData.status = response.status;
-    return returnData;
-};
-
 interface Props {
     children: React.ReactNode;
 }
 
 export default function Auth(props: Props) {
+    const [settingsFetched, setSettingsFetched] = useState(false);
+    const { changedSettings, setChangedSettings, updateSettings, settings } =
+        useSettings();
+
     const [progress, updateProgress] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true); //for curtain
+    const [loading, setLoading] = useState(true);
+    const [serverRetry, setServerRetry] = useState<NodeJS.Timer | null>(null);
+    const [errorCode, setErrorCode] = useState(0);
     const [userInfo, setUserInfo] = useState<UserInfo>({
         sessionToken: '',
         name: '',
@@ -80,6 +72,25 @@ export default function Auth(props: Props) {
             setUserInfo(userInfoParsed);
     }, []);
 
+    const apiGet = async (path: string, options = {}) => {
+        const response = await internal_apiGet(
+            path,
+            userInfo.sessionToken,
+            options
+        );
+        return response;
+    };
+
+    const apiPost = async (path: string, data: any, options = {}) => {
+        const response = await internal_apiPost(
+            path,
+            data,
+            userInfo.sessionToken,
+            options
+        );
+        return response;
+    };
+
     const updateUserInfo = (userInfo: Partial<UserInfo>) => {
         setUserInfo((info) => {
             const newInfo = {
@@ -91,51 +102,16 @@ export default function Auth(props: Props) {
         });
     };
 
-    const apiGet = async (path: string, options = {}) => {
-        try {
-            const response = await fetch(apiUrl + path, {
-                ...options,
-                method: 'GET',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    Authorization: userInfo.sessionToken || '',
-                },
-            });
-            return await processResponse(response);
-        } catch (error) {
-            return {
-                error: 'Connection error',
-                status: 500,
-            };
-        }
-    };
-
-    const apiPost = async (path: string, body = {}, options = {}) => {
-        try {
-            const response = await fetch(apiUrl + path, {
-                ...options,
-                method: 'POST',
-                body: JSON.stringify(body),
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    Authorization: userInfo.sessionToken || '',
-                },
-            });
-            return await processResponse(response);
-        } catch (error) {
-            return {
-                error: 'Connection error',
-                status: 500,
-            };
-        }
-    };
-
     const getProgress = async () => {
-        const response = await apiGet(PROGRESS_URL);
+        const response = await apiGet(
+            PROGRESS_URL + '&needSettings=' + (!settingsFetched).toString()
+        );
         if (Math.floor(response.status / 100) === 2) {
             if (response.status === 200) {
+                if ('settings' in response && response.settings) {
+                    updateSettings(response.settings);
+                    setSettingsFetched(true);
+                }
                 updateProgress(response.progress);
             } else if (response.status === 201) {
                 if (!userInfo.sessionToken) {
@@ -147,7 +123,16 @@ export default function Auth(props: Props) {
 
             if (!__DEV__) setTimeout(() => setLoading(false), 400);
             else setLoading(false);
-        } else setLoading(true);
+
+            if (serverRetry) {
+                clearTimeout(serverRetry);
+                setServerRetry(null);
+            }
+        } else {
+            setLoading(true);
+            setServerRetry(setTimeout(getProgress, 2000));
+            setErrorCode(response.status);
+        }
     };
 
     const setProgress = async (progress: string) => {
@@ -165,7 +150,6 @@ export default function Auth(props: Props) {
             getProgress();
     }, [userInfo]);
 
-    const { changedSettings, setChangedSettings, settings } = useSettings();
     useEffect(() => {
         if (changedSettings) {
             apiPost('/settings', { settings });
@@ -185,13 +169,22 @@ export default function Auth(props: Props) {
                 updateUserInfo,
             }}
         >
-            <CSSTransition in={loading} timeout={0} classNames="curtainHolder">
-                <div>
-                    <div className="curtainLeft" />
-                    <div className="curtainRight" />
-                </div>
+            <CSSTransition
+                in={loading}
+                timeout={1000}
+                classNames="curtainHolder"
+            >
+                <LoadingScreen code={errorCode} />
             </CSSTransition>
-            {props.children}
+            {!loading && (
+                <>
+                    {(userInfo.sessionToken === 'empty' ||
+                        userInfo.sessionToken === 'waiting') && (
+                        <LoginPopup open={true} type={'join'} />
+                    )}
+                    {props.children}
+                </>
+            )}
         </AuthContext.Provider>
     );
 }

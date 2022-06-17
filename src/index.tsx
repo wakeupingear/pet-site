@@ -15,22 +15,25 @@ const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 );
 root.render(
-    <Settings>
-        <Auth>
-            <DialogueMapper>
-                <Helmet>
-                    <meta charSet="utf-8" />
-                    <link rel="canonical" href="http://willfarhat.com" />
-                </Helmet>
-                <BrowserRouter>
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="*" element={<Backstreet />} />
-                    </Routes>
-                </BrowserRouter>
-            </DialogueMapper>
-        </Auth>
-    </Settings>
+    <>
+        <Helmet>
+            <title>pet game</title>
+            <meta charSet="utf-8" />
+            <link rel="canonical" href="http://willfarhat.com" />
+        </Helmet>
+        <Settings>
+            <Auth>
+                <DialogueMapper>
+                    <BrowserRouter>
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="*" element={<Backstreet />} />
+                        </Routes>
+                    </BrowserRouter>
+                </DialogueMapper>
+            </Auth>
+        </Settings>
+    </>
 );
 
 // If you want to start measuring performance in your app, pass a function

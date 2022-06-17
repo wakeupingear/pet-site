@@ -118,16 +118,16 @@ a:hover:after {
 }
 
 .settingsContent {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+    @apply mt-8 mb-8;
+    @apply flex flex-col;
 }
 
-.settingsModalPage > div {
-    display: flex;
+.settingsContent > div {
+    @apply flex flex-row items-center justify-around;
+}
+
+.settingsSlider > div {
     width: 100%;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
 }
 
 .settingsModalPage > a {
@@ -265,14 +265,34 @@ input {
     @apply rounded-lg border-2 border-gray-300;
 }
 
-.curtainLeft,
-.curtainRight {
+.loadingScreen {
+    @apply pointer-events-none fixed z-50 flex h-[100vh] w-[100vw] select-none items-center justify-center;
+}
+
+.loadingScreenSpinner {
+    @apply flex flex-col items-center justify-center;
+}
+
+.loadingScreenSpinner * {
+    @apply relative z-[60] m-4;
+}
+
+.serverLoadingText {
+    @apply rounded-full bg-white shadow-lg;
+}
+
+.serverErrorCode {
+    @apply absolute bottom-0 right-0;
+    @apply pointer-events-auto select-text;
+}
+
+.curtain {
+    @apply pointer-events-auto !opacity-100;
     position: fixed;
     top: 0;
     width: 50%;
     height: 100%;
     background-color: rgba(255, 0, 0, 1);
-    z-index: 10;
     transition: 300ms;
 }
 
@@ -284,9 +304,18 @@ input {
     right: 0;
 }
 
-.curtainHolder-exit > *,
-.curtainHolder-exit-done > * {
-    width: 0;
+.curtainHolder-exit .loadingScreenSpinner,
+.curtainHolder-exit-done .loadingScreenSpinner {
+    opacity: 0;
+}
+
+.curtainHolder-exit .curtain,
+.curtainHolder-exit-done .curtain {
+    @apply w-0;
+}
+
+.curtainHolder-exit-done {
+    @apply hidden;
 }
 
 .page {
