@@ -162,8 +162,10 @@ export default function useCreaturePhysics(
             //Check if touching the mouse
             const _touchingMouse =
                 obj.grabbable &&
-                Math.abs(mouse.x - obj.position.x) < obj.radius &&
-                Math.abs(mouse.y - obj.position.y) < obj.radius;
+                Math.sqrt(
+                    Math.pow(Math.abs(mouse.x - obj.position.x), 2) +
+                        Math.pow(Math.abs(mouse.y - obj.position.y), 2)
+                ) <= obj.radius;
             if (obj.grabbable) {
                 if (_touchingMouse || obj.grabbed) {
                     document.body.style.cursor = 'pointer';

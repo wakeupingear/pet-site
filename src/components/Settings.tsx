@@ -20,6 +20,7 @@ interface Props {
 }
 
 interface Settings {
+    cursorTrail: boolean;
     fps: number;
     volume: number;
 }
@@ -29,6 +30,7 @@ Modal.setAppElement('#root');
 export default function Settings(props: Props) {
     const [open, setOpen] = useState(false);
     const [settings, setSettings] = useState<Settings>({
+        cursorTrail: true,
         fps: 60,
         volume: 100,
     });

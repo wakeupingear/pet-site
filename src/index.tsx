@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import DialogueMapper from './components/DialogueMapper';
 import Settings from './components/Settings';
 import Backstreet from './pages/Backstreet';
+import Cursor from './components/Cursor';
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -22,6 +23,7 @@ root.render(
             <link rel="canonical" href="http://willfarhat.com" />
         </Helmet>
         <Settings>
+            <Cursor />
             <Auth>
                 <DialogueMapper>
                     <BrowserRouter>

@@ -63,6 +63,13 @@ a:hover:after {
     backdrop-filter: blur(5px);
 }
 
+.cursorPoint {
+    @apply absolute h-2 w-2 rounded-full bg-black;
+    @apply z-[100] translate-x-[-50%] translate-y-[-50%];
+    @apply pointer-events-none select-none;
+    @apply transition-opacity;
+}
+
 .settingsButton {
     @apply absolute right-8 top-8 z-[10];
 }

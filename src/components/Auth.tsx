@@ -78,6 +78,7 @@ export default function Auth(props: Props) {
             userInfo.sessionToken,
             options
         );
+        if (response.status === 500) setLoading(true);
         return response;
     };
 
@@ -88,6 +89,7 @@ export default function Auth(props: Props) {
             userInfo.sessionToken,
             options
         );
+        if (response.status === 500) setLoading(true);
         return response;
     };
 
