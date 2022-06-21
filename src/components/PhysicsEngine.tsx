@@ -4,20 +4,32 @@ import { PhysicsObject, Vec2 } from '../utils/physics/PhysicsObject';
 import {
     CreatureObject,
     CreatureEmotion,
+    Creature,
 } from '../utils/physics/CreatureObject';
 
 interface ObjEntries {
-    [key: string]: PhysicsObject;
+    [key: string]: PhysicsObject | CreatureObject;
 }
 
 export type PhysicsFunctions = {
-    createCreature: (position?: Vec2, emotion?: CreatureEmotion) => number;
+    createCreature: (
+        creatureData: Creature,
+        position?: Vec2,
+        emotion?: CreatureEmotion
+    ) => number;
     createObject: () => number;
     destroy: () => void;
+    destroyObject: (id: number) => boolean;
     setCanvasOffset: (x: number, y: number) => void;
     setFPS: (fps: number) => void;
     setup: (ref: HTMLCanvasElement) => void;
     objList: ObjEntries;
+    updateCreature: (
+        id: number,
+        creatureData?: Creature,
+        position?: Vec2,
+        emotion?: CreatureEmotion
+    ) => void;
 };
 
 export interface MouseData extends Vec2 {
@@ -38,15 +50,13 @@ let offsetX = 0,
 let objects: ObjEntries = {};
 let idCounter = 0;
 
-export default function useCreaturePhysics(
+export default function usePhysicsEngine(
     canvasRef: any,
     drag: number,
     density: number,
     gravity: number
 ): PhysicsFunctions {
-    const [objList, setObjList] = useState<{ [key: string]: PhysicsObject }>(
-        objects
-    );
+    const [objList, setObjList] = useState<ObjEntries>(objects);
 
     const setup = (ref = canvasRef) => {
         canvas = ref;
@@ -101,7 +111,22 @@ export default function useCreaturePhysics(
         return id;
     };
 
+    const updateCreature = (
+        id: number,
+        creatureData?: Creature,
+        position?: Vec2,
+        emotion?: CreatureEmotion
+    ) => {
+        if (objects[id] instanceof CreatureObject) {
+            const obj = objects[id] as CreatureObject;
+            if (creatureData !== undefined) obj.creatureData = creatureData;
+            if (position !== undefined) obj.position = position;
+            if (emotion !== undefined) obj.emotion = emotion;
+        }
+    };
+
     const createCreature = (
+        creatureData: Creature,
         position: Vec2 = { x: canvas.width / 2, y: canvas.height / 2 },
         emotion: CreatureEmotion = CreatureEmotion.Neutral
     ) => {
@@ -112,12 +137,13 @@ export default function useCreaturePhysics(
             velocity: { x: 0, y: 0 },
             e: 0.8,
             mass: 1,
+            color: '#FFFFFF',
             radius: 100,
-            color: '#0000FF',
             fixed: false,
             grabbable: true,
             fps,
             emotion,
+            creatureData,
         });
         objects[id] = obj;
         return id;
@@ -298,13 +324,23 @@ export default function useCreaturePhysics(
         startInterval();
     };
 
+    const destroyObject = (id: number) => {
+        if (!(id in objects)) return false;
+
+        delete objects[id];
+        setObjList(objects);
+        return true;
+    };
+
     return {
         createCreature,
         createObject,
         destroy,
+        destroyObject,
         setCanvasOffset,
         setFPS,
         setup,
         objList,
+        updateCreature,
     };
 }

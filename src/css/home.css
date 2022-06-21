@@ -1,4 +1,38 @@
+.page {
+    @apply overflow-y-hidden;
+}
+
 .creatureBox {
-    @apply rounded-3xl border-8 border-solid border-black bg-transparent;
-    @apply max-w-[95%] shadow-lg;
+    @apply rounded-t-2xl border-8 border-b-0 border-solid border-black bg-transparent;
+    @apply overflow-hidden shadow-lg;
+}
+
+.screenContainer {
+    @apply relative flex h-[100vh];
+}
+
+.screen {
+    @apply flex flex-col items-center justify-center;
+    @apply relative h-full w-[100vw];
+}
+
+.intro {
+    @apply flex flex-col justify-center text-center;
+    @apply absolute left-0 right-0 top-0 bottom-0 ml-auto mr-auto;
+}
+
+.door {
+    --size: 50rem;
+    @apply absolute left-0 right-0 bottom-[-96px] ml-auto mr-auto;
+    @apply z-10 flex h-[var(--size)] w-[var(--size)] items-center justify-center;
+    @apply rounded-full border-[24px] border-solid border-red-600 bg-black shadow-2xl;
+}
+.door > div {
+    @apply rounded-full bg-white;
+    @apply relative flex h-[90%] w-[90%];
+}
+.doorknob {
+    @apply absolute right-[10%] bottom-[40%] rounded-full bg-yellow-300;
+    @apply flex h-14 w-14;
+    @apply hover:cursor-pointer;
 }

@@ -1,6 +1,15 @@
 import Tag from '../../components/Tag';
 import { PhysicsObject, PhysicsObjectProps, Vec2 } from './PhysicsObject';
 
+export type Creature = {
+    name: string;
+    health: number;
+    styles: {
+        color: string;
+        radius: number;
+    };
+};
+
 export enum CreatureEmotion {
     Neutral,
     Happy,
@@ -16,10 +25,12 @@ export enum CreatureEmotion {
 
 export type CreatureProps = PhysicsObjectProps & {
     emotion: CreatureEmotion;
+    creatureData: Creature;
 };
 
 export class CreatureObject extends PhysicsObject {
     emotion: CreatureEmotion;
+    creatureData: Creature;
 
     velocityLookDelay = 0;
 
@@ -27,6 +38,10 @@ export class CreatureObject extends PhysicsObject {
         super(props);
 
         this.emotion = props.emotion;
+        this.creatureData = props.creatureData;
+        this.radius = this.creatureData.styles.radius;
+
+        Object.setPrototypeOf(this, CreatureObject.prototype);
     }
 
     move(drag: number, density: number, ag: number, gravity: number) {
@@ -95,6 +110,7 @@ export class CreatureObject extends PhysicsObject {
                     left: this.position.x + 'px',
                     width: this.radius * 2 + 'px',
                     height: this.radius * 2 + 'px',
+                    backgroundColor: this.creatureData.styles.color,
                 }}
             >
                 <div
@@ -103,14 +119,20 @@ export class CreatureObject extends PhysicsObject {
                         (!shouldLook && 'creatureEyeNeutral')
                     }
                     style={{
-                        top: lenY * 10 + 'px',
-                        left: lenX * 30 - 6 + 'px',
+                        top: this.radius / 6 + lenY * 10 + 'px',
+                        left: lenX * 30 + 'px',
                     }}
                 >
                     {eye}
+                    <div
+                        className="creatureEyeSpacer"
+                        style={{
+                            width: this.radius / 4,
+                        }}
+                    />
                     {eye}
                 </div>
-                <Tag/>
+                <Tag />
             </div>
         );
     }

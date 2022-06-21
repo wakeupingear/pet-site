@@ -70,8 +70,28 @@ a:hover:after {
     @apply transition-opacity;
 }
 
+.fade-appear,
+.fade-enter {
+    opacity: 0;
+}
+
+.fade-appear-active,
+.fade-enter-active {
+    transition: opacity 0.3s linear;
+    opacity: 1;
+}
+
+.fade-exit {
+    transition: opacity 0.2s linear;
+    opacity: 1;
+}
+
+.fade-exit-active {
+    opacity: 0;
+}
+
 .settingsButton {
-    @apply absolute right-8 top-8 z-[10];
+    @apply fixed right-8 top-8 z-[10];
 }
 
 .settingsButton > div {
@@ -246,8 +266,8 @@ input {
 }
 
 .button {
-    @apply select-none opacity-30 transition-all;
-    @apply min-w-[5rem] rounded-xl bg-gray-300 p-3;
+    @apply select-none text-center opacity-30 transition-all;
+    @apply m-2 min-w-[5rem] rounded-xl bg-gray-300 p-3;
 }
 .buttonActive:not(.buttonError) {
     @apply bg-blue-300 opacity-100 shadow-sm;
@@ -326,27 +346,37 @@ input {
 }
 
 .page {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;
     transition: 300ms;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
 }
 
 .creatureBox {
     position: relative;
     display: flex;
+    @apply w-fit;
+}
+
+.glass {
+    @apply absolute h-full w-full bg-blue-500 opacity-20;
+}
+
+.glass::before {
+    @apply m-4 inline-block h-16 w-16 content-[''];
+    @apply rounded-full bg-white;
+}
+
+.grass {
+    @apply absolute bottom-0;
+    @apply flex h-8 w-full;
+    @apply bg-green-500;
 }
 
 .creatureBoxBack,
 .creatureBoxFront {
-    @apply pointer-events-none select-none;
+    @apply pointer-events-none relative select-none;
+    @apply flex;
 }
 
 .creatureBox > div {
@@ -362,13 +392,11 @@ input {
 .physicsObject {
     @apply absolute translate-x-[-50%] translate-y-[-50%];
     @apply flex h-[100%] w-[100%] justify-center align-middle;
-    @apply bg-red-500 text-center;
-    @apply select-all;
-    @apply rounded-[100%];
+    @apply select-all rounded-[100%] text-center;
 }
 
 .creatureEyebox {
-    @apply absolute flex flex-row;
+    @apply absolute flex w-full flex-row justify-center align-middle;
 }
 
 .creatureEyeNeutral,
@@ -379,8 +407,12 @@ input {
 .creatureEye {
     @apply overflow-hidden rounded-[100%] bg-white;
     @apply border-4 border-black;
-    @apply m-4 flex justify-center align-middle;
+    @apply flex justify-center align-middle;
     @apply relative;
+}
+
+.creatureEyeSpacer {
+    @apply flex;
 }
 
 .creatureEyeball {
@@ -396,6 +428,15 @@ input {
 .creatureTag {
     @apply pointer-events-auto z-50 select-none hover:cursor-pointer;
     @apply flex h-min w-min;
+}
+
+.creatureTag > div {
+    @apply translate-y-[-50%];
+    @apply h-4 w-4 rounded-full bg-black transition-all;
+}
+
+.creatureTag:hover > div {
+    @apply hover:h-7 hover:w-7;
 }
 
 .backstreetCovered {

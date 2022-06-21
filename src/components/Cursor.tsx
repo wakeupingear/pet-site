@@ -1,4 +1,5 @@
 import React, { createRef, useEffect, useRef, useState } from 'react';
+import { useAuth } from './Auth';
 import { useSettings } from './Settings';
 
 const NUM_DOTS = 20;
@@ -24,6 +25,7 @@ let mouseOut = true;
 let mouseDown = false;
 let snapNext = false;
 let stoppedMoving = false;
+let menuOpen = false;
 
 const onMouseOut = () => {
     mouseOut = false;
@@ -54,12 +56,23 @@ const updateMouse = (event: MouseEvent) => {
     }
 };
 
+const scrollMouse = () => {
+    if (!mouseOut) {
+        stoppedMoving = true;
+    }
+};
+
 export default function Cursor() {
+    const { popupEnabled } = useAuth();
     const { settings } = useSettings();
 
     const elementsRef = useRef(
         Array.from({ length: NUM_DOTS }, () => createRef<any>())
     );
+
+    useEffect(() => {
+        menuOpen = popupEnabled;
+    }, [popupEnabled]);
 
     useEffect(() => {
         if (settings.cursorTrail || true) {
@@ -68,6 +81,7 @@ export default function Cursor() {
             window.addEventListener('mouseout', onMouseOut);
             window.addEventListener('mousedown', onMouseDown);
             window.addEventListener('mouseup', onMouseUp);
+            window.addEventListener('scroll', scrollMouse);
 
             const animate = () => {
                 let { x, y } = mouse;
@@ -107,7 +121,7 @@ export default function Cursor() {
                             x + 'px';
                         elementsRef.current[index].current.style.top = y + 'px';
                         elementsRef.current[index].current.style.opacity =
-                            Number(!stoppedMoving && !mouseDown);
+                            Number(!stoppedMoving && !mouseDown && !menuOpen);
                     }
                 });
 
@@ -122,6 +136,7 @@ export default function Cursor() {
                 window.document.removeEventListener('mouseout', onMouseOut);
                 window.document.removeEventListener('mousedown', onMouseDown);
                 window.document.removeEventListener('mouseup', onMouseUp);
+                window.document.removeEventListener('scroll', scrollMouse);
             };
         }
     }, [settings.cursorTrail, elementsRef]);

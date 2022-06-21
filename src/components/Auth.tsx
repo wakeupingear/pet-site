@@ -10,6 +10,7 @@ import {
     APIResponse,
     __DEV__,
 } from '../utils/api';
+import { Creature } from '../utils/physics/CreatureObject';
 
 const PROGRESS_URL = `/progress?host=site&pathname=${window.location.pathname}`;
 const STORAGE_VERSION = 1;
@@ -27,9 +28,13 @@ export type UserInfo = {
 interface AuthContextProps {
     apiGet: (url: string) => Promise<APIResponse>;
     apiPost: (url: string, data: any) => Promise<APIResponse>;
+    creature: Creature | null;
     getProgress: () => void;
     userInfo: UserInfo;
+    popupEnabled: boolean;
     progress: string | null;
+    setCreature: (creatureData: Creature | null) => void;
+    setPopupEnabled: (popup: boolean) => void;
     setProgress: (progress: string) => void;
     updateUserInfo: (userInfo: Partial<UserInfo>) => void;
 }
@@ -40,19 +45,30 @@ interface Props {
 
 export default function Auth(props: Props) {
     const [settingsFetched, setSettingsFetched] = useState(false);
-    const { changedSettings, setChangedSettings, updateSettings, settings } =
-        useSettings();
+    const {
+        changedSettings,
+        setChangedSettings,
+        updateSettings,
+        settings,
+        settingsOpen,
+    } = useSettings();
 
     const [progress, updateProgress] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [serverRetry, setServerRetry] = useState<NodeJS.Timer | null>(null);
     const [errorCode, setErrorCode] = useState(0);
+    const [creature, setCreatureState] = useState<Creature | null>(null);
+    const [popupEnabled, setPopupEnabled] = useState(false);
     const [userInfo, setUserInfo] = useState<UserInfo>({
         sessionToken: '',
         name: '',
         email: '',
         version: STORAGE_VERSION,
     });
+
+    useEffect(() => {
+        setPopupEnabled(settingsOpen);
+    }, [settingsOpen]);
 
     const isActiveSession = () =>
         Boolean(
@@ -114,6 +130,9 @@ export default function Auth(props: Props) {
                     updateSettings(response.settings);
                     setSettingsFetched(true);
                 }
+
+                if (response.creature) setCreature(response.creature);
+
                 updateProgress(response.progress);
             } else if (response.status === 201) {
                 if (!userInfo.sessionToken) {
@@ -159,13 +178,22 @@ export default function Auth(props: Props) {
         }
     }, [changedSettings]);
 
+    const setCreature = (creatureData: Creature | null) => {
+        apiPost('/creature', { creature: creatureData, isDev: __DEV__ });
+        setCreatureState(creatureData);
+    };
+
     return (
         <AuthContext.Provider
             value={{
                 apiGet,
                 apiPost,
+                creature,
                 getProgress,
+                popupEnabled,
                 progress,
+                setCreature,
+                setPopupEnabled,
                 setProgress,
                 userInfo,
                 updateUserInfo,

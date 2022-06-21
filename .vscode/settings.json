@@ -1,7 +1,4 @@
 {
-    "tailwindCSS.includeLanguages": {
-        "css": "css"
-    },
     "editor.quickSuggestions": {
         "strings": true
     }

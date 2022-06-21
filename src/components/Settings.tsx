@@ -12,6 +12,7 @@ interface SettingsContextProps {
     changedSettings: boolean;
     setChangedSettings: React.Dispatch<React.SetStateAction<boolean>>;
     settings: Settings;
+    settingsOpen: boolean;
     updateSettings: (change: Partial<Settings>) => void;
 }
 
@@ -64,7 +65,6 @@ export default function Settings(props: Props) {
             '/admin/reset',
             'foojardigibutterjoe'
         );
-        console.log(response);
         if (response.status === 200) {
             window.location.reload();
         }
@@ -76,6 +76,7 @@ export default function Settings(props: Props) {
                 changedSettings,
                 setChangedSettings,
                 settings,
+                settingsOpen: open,
                 updateSettings,
             }}
         >

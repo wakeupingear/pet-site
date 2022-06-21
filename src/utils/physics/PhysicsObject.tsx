@@ -1,5 +1,5 @@
 import React from 'react';
-import { MouseData } from '../../components/CreaturePhysics';
+import { MouseData } from '../../components/PhysicsEngine';
 
 export type Vec2 = {
     x: number;
