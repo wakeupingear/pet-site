@@ -8,6 +8,7 @@ export type Creature = {
         color: string;
         radius: number;
     };
+    location: string;
 };
 
 export enum CreatureEmotion {

@@ -24,7 +24,6 @@ export default function Backstreet() {
     const [clicks, setClicks] = useState(0);
     const handleClick = () => {
         setClicks((oldclicks) => oldclicks + 1);
-        console.log(clicks);
         if (clicks >= 5) setProgress('broken');
     };
 

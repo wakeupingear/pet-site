@@ -11,6 +11,8 @@ import {
     __DEV__,
 } from '../utils/api';
 import { Creature } from '../utils/physics/CreatureObject';
+import { usePhysics } from '../utils/physics/PhysicsEngine';
+import getLocation from '../utils/getLocation';
 
 const PROGRESS_URL = `/progress?host=site&pathname=${window.location.pathname}`;
 const STORAGE_VERSION = 1;
@@ -28,12 +30,13 @@ export type UserInfo = {
 interface AuthContextProps {
     apiGet: (url: string) => Promise<APIResponse>;
     apiPost: (url: string, data: any) => Promise<APIResponse>;
-    creature: Creature | null;
+    destroyMyCreature: () => void;
     getProgress: () => void;
+    myCreature: Creature | null;
     userInfo: UserInfo;
     popupEnabled: boolean;
     progress: string | null;
-    setCreature: (creatureData: Creature | null) => void;
+    setMyCreature: (creatureData: Creature | null) => void;
     setPopupEnabled: (popup: boolean) => void;
     setProgress: (progress: string) => void;
     updateUserInfo: (userInfo: Partial<UserInfo>) => void;
@@ -57,7 +60,6 @@ export default function Auth(props: Props) {
     const [loading, setLoading] = useState(true);
     const [serverRetry, setServerRetry] = useState<NodeJS.Timer | null>(null);
     const [errorCode, setErrorCode] = useState(0);
-    const [creature, setCreatureState] = useState<Creature | null>(null);
     const [popupEnabled, setPopupEnabled] = useState(false);
     const [userInfo, setUserInfo] = useState<UserInfo>({
         sessionToken: '',
@@ -131,7 +133,7 @@ export default function Auth(props: Props) {
                     setSettingsFetched(true);
                 }
 
-                if (response.creature) setCreature(response.creature);
+                if (response.creature) setMyCreature(response.creature);
 
                 updateProgress(response.progress);
             } else if (response.status === 201) {
@@ -142,8 +144,7 @@ export default function Auth(props: Props) {
                 }
             }
 
-            if (!__DEV__) setTimeout(() => setLoading(false), 400);
-            else setLoading(false);
+            setTimeout(() => setLoading(false), __DEV__ ? 0 : 600);
 
             if (serverRetry) {
                 clearTimeout(serverRetry);
@@ -178,21 +179,42 @@ export default function Auth(props: Props) {
         }
     }, [changedSettings]);
 
-    const setCreature = (creatureData: Creature | null) => {
+    const { active, createCreature, destroyObject, updateCreature } =
+        usePhysics();
+    const [myCreature, setMyCreatureInternal] = useState<Creature | null>(null);
+    const [myCreatureId, setMyCreatureId] = useState<number>(NaN);
+    const setMyCreature = (creatureData: Creature | null) => {
         apiPost('/creature', { creature: creatureData, isDev: __DEV__ });
-        setCreatureState(creatureData);
+        setMyCreatureInternal(creatureData);
     };
+    const destroyMyCreature = () => {
+        if (destroyObject(myCreatureId)) {
+            setMyCreatureId(NaN);
+            setMyCreature(null);
+        } else console.error('Failed to destroy creature', myCreatureId);
+    };
+    useEffect(() => {
+        if (active && myCreature && getLocation() === myCreature.location) {
+            if (!isNaN(myCreatureId)) {
+                updateCreature(myCreatureId, myCreature);
+            } else {
+                const id = createCreature(myCreature);
+                setMyCreatureId(id);
+            }
+        }
+    }, [active, myCreature]);
 
     return (
         <AuthContext.Provider
             value={{
                 apiGet,
                 apiPost,
-                creature,
+                destroyMyCreature,
                 getProgress,
+                myCreature,
                 popupEnabled,
                 progress,
-                setCreature,
+                setMyCreature,
                 setPopupEnabled,
                 setProgress,
                 userInfo,

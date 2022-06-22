@@ -11,6 +11,7 @@ import Settings from './components/Settings';
 import Backstreet from './pages/Backstreet';
 import Cursor from './components/Cursor';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import PhysicsEngine from './utils/physics/PhysicsEngine';
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -27,31 +28,39 @@ root.render(
             <link rel="canonical" href="http://willfarhat.com" />
         </Helmet>
         <Settings>
-            <Auth>
-                <Cursor />
-                <DialogueMapper>
-                    <BrowserRouter>
-                        <TransitionGroup component="main" className="page-main">
-                            <CSSTransition
-                                key={currentKey}
-                                timeout={timeout}
-                                classNames="fade"
-                                appear
+            <PhysicsEngine>
+                <Auth>
+                    <Cursor />
+                    <DialogueMapper>
+                        <BrowserRouter>
+                            <TransitionGroup
+                                component="main"
+                                className="page-main"
                             >
-                                <section className="page-main-inner">
-                                    <Routes>
-                                        <Route path="/" element={<Home />} />
-                                        <Route
-                                            path="*"
-                                            element={<Backstreet />}
-                                        />
-                                    </Routes>
-                                </section>
-                            </CSSTransition>
-                        </TransitionGroup>
-                    </BrowserRouter>
-                </DialogueMapper>
-            </Auth>
+                                <CSSTransition
+                                    key={currentKey}
+                                    timeout={timeout}
+                                    classNames="fade"
+                                    appear
+                                >
+                                    <section className="page-main-inner">
+                                        <Routes>
+                                            <Route
+                                                path="/"
+                                                element={<Home />}
+                                            />
+                                            <Route
+                                                path="*"
+                                                element={<Backstreet />}
+                                            />
+                                        </Routes>
+                                    </section>
+                                </CSSTransition>
+                            </TransitionGroup>
+                        </BrowserRouter>
+                    </DialogueMapper>
+                </Auth>
+            </PhysicsEngine>
         </Settings>
     </>
 );

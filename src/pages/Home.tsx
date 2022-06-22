@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import '../css/home.css';
 
@@ -7,6 +7,7 @@ import CreatureBox from '../components/CreatureBox';
 import { useDialogueMapper } from '../components/DialogueMapper';
 import IntroLogo from '../components/IntroLogo';
 import { __DEV__ } from '../utils/api';
+import { Link } from 'react-router-dom';
 
 export default function Home() {
     const { progress } = useAuth();
@@ -46,6 +47,7 @@ export default function Home() {
     };
 
     const [scrollable, setScrollable] = useState(false);
+    const pageRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const isIntro = progress === 'intro';
         setScrollable(!isIntro);
@@ -55,9 +57,18 @@ export default function Home() {
         }
     }, [progress]);
 
+    useEffect(() => {
+        if (pageRef.current && progress && progress !== 'intro') {
+            pageRef.current.scrollTo({
+                left: pageRef.current.scrollWidth,
+            });
+        }
+    }, [pageRef, progress]);
+
     return (
         <div
             className="page"
+            ref={pageRef}
             style={{
                 overflowX: scrollable || __DEV__ ? 'scroll' : 'hidden',
             }}
@@ -78,13 +89,16 @@ export default function Home() {
                             </>
                         }
                         size={{ x: 900, y: 500 }}
+                        physicsState={{
+                            interactable: false,
+                        }}
                     />
                     <div className="h-5 w-[1000px] rounded-full bg-black shadow-lg" />
                 </div>
                 <div className="screen bg-red-400">
                     <div className="door">
                         <div>
-                            <div className="doorknob" />
+                            <Link to={'/store'} className="doorknob" />
                         </div>
                     </div>
                 </div>

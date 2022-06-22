@@ -1,5 +1,5 @@
 import React from 'react';
-import { MouseData } from '../../components/PhysicsEngine';
+import { MouseData } from './PhysicsEngine';
 
 export type Vec2 = {
     x: number;
@@ -76,8 +76,6 @@ export class PhysicsObject {
 
     move(drag: number, density: number, ag: number, gravity: number) {
         if (!this.fixed && !this.grabbed) {
-            //physics - calculating the aerodynamic forces to drag
-            // -0.5 * Cd * A * v^2 * rho
             let fx =
                 -0.5 *
                 drag *

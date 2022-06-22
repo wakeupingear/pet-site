@@ -4,10 +4,11 @@ import useWindowSize from '../utils/useWindowSize';
 import { useAuth } from './Auth';
 import Button from './Button';
 
-import usePhysicsEngine, { PhysicsFunctions } from './PhysicsEngine';
+import { PhysicsState, usePhysics } from '../utils/physics/PhysicsEngine';
 import { Creature } from '../utils/physics/CreatureObject';
 import { useSettings } from './Settings';
 import { Vec2 } from '../utils/physics/PhysicsObject';
+import getLocation from '../utils/getLocation';
 
 const COLORS = [
     '#6A5ACD',
@@ -23,6 +24,7 @@ const COLORS = [
 interface CreatureBoxProps {
     back?: ReactElement;
     front?: ReactElement;
+    physicsState?: Partial<PhysicsState>;
     marginHorizontal?: number;
     marginVertical?: number;
     size?: Vec2;
@@ -34,40 +36,21 @@ export default function CreatureBox(props: CreatureBoxProps) {
     const originalSize = props.size || { x: 900, y: 600 };
     const [size, setSize] = useState(originalSize);
     const { settings } = useSettings();
-    const { creature, setCreature } = useAuth();
-    const [creatureId, setCreatureId] = useState<number>(NaN);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { myCreature, destroyMyCreature, setMyCreature } = useAuth();
+
     const {
-        createCreature,
-        createObject,
-        destroy,
-        destroyObject,
+        active,
+        physicsObjects,
         setCanvasOffset,
         setFPS,
-        setup,
-        objList,
-        updateCreature,
-    }: PhysicsFunctions = usePhysicsEngine(canvasRef.current, 0.47, 1.22, 1);
+        setPhysics,
+        setPhysicsCanvasRef,
+    } = usePhysics();
 
+    const localRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
-        if (canvasRef.current) {
-            setup(canvasRef.current);
-        }
-
-        return () => {
-            destroy();
-        };
-    }, [canvasRef]);
-
-    useEffect(() => {
-        if (creature) {
-            if (!isNaN(creatureId)) updateCreature(creatureId, creature);
-            else {
-                const id = createCreature(creature);
-                setCreatureId(id);
-            }
-        }
-    }, [creature]);
+        setPhysicsCanvasRef(localRef);
+    }, [localRef]);
 
     useEffect(() => {
         setFPS(settings.fps);
@@ -77,12 +60,12 @@ export default function CreatureBox(props: CreatureBoxProps) {
     useEffect(() => {
         if (boxRef.current) {
             const { offsetTop, offsetLeft } = boxRef.current;
-            setCanvasOffset(offsetLeft, offsetTop);
+            setCanvasOffset({ x: offsetLeft, y: offsetTop });
         }
     }, [boxRef, screenWidth, screenHeight]);
 
     useEffect(() => {
-        if (canvasRef.current) {
+        if (active) {
             const { marginHorizontal = 6, marginVertical = 6 } = props;
             const newSize = originalSize;
             if (screenWidth) {
@@ -101,7 +84,13 @@ export default function CreatureBox(props: CreatureBoxProps) {
             setSize(newSize);
             // Change object position here
         }
-    }, [canvasRef, screenWidth, screenHeight, props.size]);
+    }, [active, screenWidth, screenHeight, props.size]);
+
+    useEffect(() => {
+        if (active && props.physicsState) {
+            setPhysics(props.physicsState);
+        }
+    }, [active]);
 
     const createCreatureFromTemplate = (
         creatureData: Partial<Creature> = {}
@@ -115,27 +104,22 @@ export default function CreatureBox(props: CreatureBoxProps) {
                 radius: Math.round(70 + Math.random() * 80),
                 ...creatureData.styles,
             },
+            location: getLocation(),
         };
-        setCreature(newCreature);
+        setMyCreature(newCreature);
     };
 
     const toggleCreature = () => {
-        if (isNaN(creatureId)) {
-            createCreatureFromTemplate();
-        } else {
-            if (destroyObject(creatureId)) {
-                setCreature(null);
-                setCreatureId(NaN);
-            }
-        }
+        if (!myCreature) createCreatureFromTemplate();
+        else destroyMyCreature();
     };
 
     return (
         <>
-            {__DEV__ && false && (
+            {__DEV__ && (
                 <div>
                     <Button onClick={toggleCreature}>
-                        {isNaN(creatureId) ? 'Create' : 'Destroy'}
+                        {!myCreature ? 'Create' : 'Destroy'}
                     </Button>
                 </div>
             )}
@@ -149,10 +133,10 @@ export default function CreatureBox(props: CreatureBoxProps) {
                     className="creatureCanvas"
                     width={size.x}
                     height={size.y}
-                    ref={canvasRef}
+                    ref={localRef}
                 />
-                {Object.keys(objList).map((id) => {
-                    return objList[id].render();
+                {Object.keys(physicsObjects).map((id) => {
+                    return physicsObjects[id].render();
                 })}
                 <div className="creatureBoxFront">{props.front}</div>
             </div>

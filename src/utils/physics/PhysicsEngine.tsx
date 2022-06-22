@@ -1,17 +1,16 @@
-import { useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
-import { PhysicsObject, Vec2 } from '../utils/physics/PhysicsObject';
-import {
-    CreatureObject,
-    CreatureEmotion,
-    Creature,
-} from '../utils/physics/CreatureObject';
+import { PhysicsObject, Vec2 } from './PhysicsObject';
+import { CreatureObject, CreatureEmotion, Creature } from './CreatureObject';
 
 interface ObjEntries {
     [key: string]: PhysicsObject | CreatureObject;
 }
 
-export type PhysicsFunctions = {
+export const PhysicsContext = createContext({} as PhysicsFunctions);
+
+export interface PhysicsFunctions {
+    active: boolean;
     createCreature: (
         creatureData: Creature,
         position?: Vec2,
@@ -20,46 +19,82 @@ export type PhysicsFunctions = {
     createObject: () => number;
     destroy: () => void;
     destroyObject: (id: number) => boolean;
-    setCanvasOffset: (x: number, y: number) => void;
+    physics: PhysicsState;
+    physicsObjects: ObjEntries;
+    setCanvasOffset: (position: Vec2) => void;
     setFPS: (fps: number) => void;
-    setup: (ref: HTMLCanvasElement) => void;
-    objList: ObjEntries;
+    setPhysics: (physics: Partial<PhysicsState>) => void;
+    setPhysicsCanvasRef: (ref: React.RefObject<HTMLCanvasElement>) => void;
     updateCreature: (
         id: number,
         creatureData?: Creature,
         position?: Vec2,
         emotion?: CreatureEmotion
     ) => void;
-};
+}
 
 export interface MouseData extends Vec2 {
     down: boolean;
     inCanvas: boolean;
 }
 
+// internal state
 let canvas: any = null;
+let width = 0;
+let height = 0;
+let offset: Vec2 = { x: 0, y: 0 };
 let ctx: any = null;
 let fps = 1 / 30; //30 FPS
 let timer: NodeJS.Timer | null = null;
 let mouse = {} as MouseData;
-let ag = 9.81; //m/s^2 acceleration due to gravity on earth = 9.81 m/s^2.
-let width = 0;
-let height = 0;
-let offsetX = 0,
-    offsetY = 0;
-let objects: ObjEntries = {};
 let idCounter = 0;
+let objects: ObjEntries = {};
 
-export default function usePhysicsEngine(
-    canvasRef: any,
-    drag: number,
-    density: number,
-    gravity: number
-): PhysicsFunctions {
-    const [objList, setObjList] = useState<ObjEntries>(objects);
+// mutable state
+export interface PhysicsState {
+    ag: number;
+    density: number;
+    drag: number;
+    gravity: number;
+    interactable: boolean;
+    borderHorizontalPadding: Vec2;
+    borderVerticalPadding: Vec2;
+}
+let state: PhysicsState = {
+    ag: 9.81,
+    density: 0.47,
+    drag: 1.22,
+    gravity: 1,
+    interactable: true,
+    borderHorizontalPadding: { x: 0, y: 0 },
+    borderVerticalPadding: { x: 0, y: 0 },
+};
 
-    const setup = (ref = canvasRef) => {
-        canvas = ref;
+interface Props {
+    children?: JSX.Element[] | JSX.Element;
+}
+
+export default function PhysicsEngine(props: Props) {
+    const [physics, setPhysicsInternal] = useState(state);
+    const [physicsObjects, setPhysicsObjects] = useState<ObjEntries>(objects);
+    const setPhysics = (physics: Partial<PhysicsState>) => {
+        state = {
+            ...state,
+            ...physics,
+        };
+        setPhysicsInternal(state);
+    };
+
+    // Internal state update
+    const updatePhysicsState = () => {
+        setPhysics(state);
+    };
+
+    const [active, setActive] = useState(false);
+    const [physicsCanvasRef, setPhysicsCanvasRef] =
+        useState<React.RefObject<HTMLCanvasElement> | null>(null);
+    const setup = (ref = physicsCanvasRef) => {
+        canvas = ref?.current;
         if (!canvas) return;
         ctx = canvas.getContext('2d');
         width = canvas.width;
@@ -75,7 +110,9 @@ export default function usePhysicsEngine(
             mouse.inCanvas = true;
         };
         canvas.onmousemove = getMousePosition;
-        startInterval();
+
+        if (timer) clearInterval(timer);
+        timer = setInterval(loop, fps * 1000);
     };
     const destroy = () => {
         if (timer) {
@@ -83,6 +120,16 @@ export default function usePhysicsEngine(
             timer = null;
         }
     };
+    useEffect(() => {
+        if (physicsCanvasRef && physicsCanvasRef.current) {
+            setup();
+            setActive(true);
+            return () => {
+                destroy();
+                setActive(false);
+            };
+        }
+    }, [physicsCanvasRef]);
 
     const createObject = (
         position: Vec2 = { x: canvas.width / 2, y: canvas.height / 2 },
@@ -108,6 +155,7 @@ export default function usePhysicsEngine(
             fps,
         });
         objects[id] = obj;
+        setPhysicsObjects({ ...objects });
         return id;
     };
 
@@ -122,6 +170,7 @@ export default function usePhysicsEngine(
             if (creatureData !== undefined) obj.creatureData = creatureData;
             if (position !== undefined) obj.position = position;
             if (emotion !== undefined) obj.emotion = emotion;
+            setPhysicsObjects({ ...objects });
         }
     };
 
@@ -146,18 +195,14 @@ export default function usePhysicsEngine(
             creatureData,
         });
         objects[id] = obj;
+        setPhysicsObjects({ ...objects });
         return id;
-    };
-
-    const startInterval = () => {
-        if (timer) clearInterval(timer);
-        timer = setInterval(loop, fps * 1000);
     };
 
     const getMousePosition = (e: MouseEvent) => {
         mouse.inCanvas = true;
-        mouse.x = e.pageX - offsetX;
-        mouse.y = e.pageY - offsetY;
+        mouse.x = e.pageX - offset.x;
+        mouse.y = e.pageY - offset.y;
     };
     const mouseDown = (e: any) => {
         if (e.which === 1) {
@@ -170,20 +215,22 @@ export default function usePhysicsEngine(
         }
     };
 
-    const setCanvasOffset = (x: number, y: number) => {
-        offsetX = x;
-        offsetY = y;
+    const setCanvasOffset = (position: Vec2) => {
+        offset = position;
     };
 
     const loop = () => {
         //Clear window at the begining of every frame
         ctx.clearRect(0, 0, width, height);
+
+        if (Object.keys(objects).length === 0) return;
+
         for (const [id, obj] of Object.entries(objects)) {
             //Pass mouse to every object
             obj.mouse = mouse;
 
             //Move
-            obj.move(drag, density, ag, gravity);
+            obj.move(state.drag, state.density, state.ag, state.gravity);
 
             //Check if touching the mouse
             const _touchingMouse =
@@ -192,7 +239,8 @@ export default function usePhysicsEngine(
                     Math.pow(Math.abs(mouse.x - obj.position.x), 2) +
                         Math.pow(Math.abs(mouse.y - obj.position.y), 2)
                 ) <= obj.radius;
-            if (obj.grabbable) {
+
+            if (obj.grabbable && state.interactable) {
                 if (_touchingMouse || obj.grabbed) {
                     document.body.style.cursor = 'pointer';
                     if (mouse.down) {
@@ -230,8 +278,7 @@ export default function usePhysicsEngine(
             collisionWall(obj);
         }
 
-        //Update the state
-        setObjList({ ...objects });
+        setPhysicsObjects({ ...objects });
     };
 
     function collisionWall(ball: PhysicsObject) {
@@ -320,27 +367,42 @@ export default function usePhysicsEngine(
     const setFPS = (newFPS: number) => {
         fps = 1 / newFPS;
         for (const [id, obj] of Object.entries(objects)) obj.fps = fps;
-
-        startInterval();
     };
 
     const destroyObject = (id: number) => {
         if (!(id in objects)) return false;
 
         delete objects[id];
-        setObjList(objects);
+        setPhysicsObjects({ ...objects });
         return true;
     };
 
-    return {
-        createCreature,
-        createObject,
-        destroy,
-        destroyObject,
-        setCanvasOffset,
-        setFPS,
-        setup,
-        objList,
-        updateCreature,
-    };
+    return (
+        <PhysicsContext.Provider
+            value={{
+                active,
+                createCreature,
+                createObject,
+                destroy,
+                destroyObject,
+                physics,
+                physicsObjects,
+                setCanvasOffset,
+                setFPS,
+                setPhysics,
+                setPhysicsCanvasRef,
+                updateCreature,
+            }}
+        >
+            {props.children}
+        </PhysicsContext.Provider>
+    );
 }
+
+export const usePhysics = () => {
+    const context = useContext(PhysicsContext);
+    if (context === undefined) {
+        throw new Error('usePhysics must be used within a PhysicsProvider');
+    }
+    return context;
+};
