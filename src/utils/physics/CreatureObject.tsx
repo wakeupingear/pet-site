@@ -32,6 +32,7 @@ export type CreatureProps = PhysicsObjectProps & {
 export class CreatureObject extends PhysicsObject {
     emotion: CreatureEmotion;
     creatureData: Creature;
+    moveTowardsMouse: boolean = false;
 
     velocityLookDelay = 0;
 
@@ -46,7 +47,21 @@ export class CreatureObject extends PhysicsObject {
     }
 
     move(drag: number, density: number, ag: number, gravity: number) {
+        if (this.moveTowardsMouse) {
+            if (
+                this.mouse.inCanvas &&
+                (Math.abs(this.position.x - this.mouse.x) > this.radius * 0.7 ||
+                    Math.abs(this.velocity.x) > 0.1)
+            ) {
+                this.moveDir = this.position.x < this.mouse.x ? 2 : -2;
+            } else this.moveDir = 0;
+        }
+
         super.move(drag, density, ag, gravity);
+    }
+
+    update(data: Partial<CreatureObject>) {
+        Object.assign(this, data);
     }
 
     draw = (ctx: CanvasRenderingContext2D) => {};
@@ -57,8 +72,9 @@ export class CreatureObject extends PhysicsObject {
         const velThresh = 2;
         if (this.velocityLookDelay > 0) this.velocityLookDelay--;
         if (
-            Math.abs(this.velocity.x) > velThresh ||
-            Math.abs(this.velocity.y) > velThresh
+            !this.moveTowardsMouse &&
+            (Math.abs(this.velocity.x) > velThresh ||
+                Math.abs(this.velocity.y) > velThresh)
         ) {
             target = {
                 x: this.velocity.x,

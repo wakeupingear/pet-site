@@ -31,6 +31,9 @@ export class PhysicsObject {
     fixed: boolean;
     grabbable: boolean;
 
+    internalAcceleration: number = 4;
+    moveDir: number = 0;
+
     touchingMouse = false;
     mouse = {} as MouseData;
     rotation = 0;
@@ -53,6 +56,10 @@ export class PhysicsObject {
         this.fixed = props.fixed;
         this.grabbable = props.grabbable;
         this.fps = props.fps;
+    }
+
+    update(data: Partial<PhysicsObject>) {
+        Object.assign(this, data);
     }
 
     draw(ctx: CanvasRenderingContext2D): void {
@@ -99,6 +106,10 @@ export class PhysicsObject {
             //F = ma or a = F/m
             let ax = fx / this.mass;
             let ay = ag * gravity + fy / this.mass;
+
+            if (this.moveDir !== 0) {
+                ax += this.moveDir * this.internalAcceleration;
+            }
 
             //Calculating the ball velocity
             this.velocity.x += ax * this.fps;

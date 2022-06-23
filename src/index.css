@@ -357,9 +357,7 @@ input {
 }
 
 .creatureBox {
-    position: relative;
-    display: flex;
-    @apply w-fit;
+    @apply relative flex w-fit shadow-inner;
 }
 
 .glass {
@@ -374,7 +372,7 @@ input {
 .grass {
     @apply absolute bottom-0;
     @apply flex h-8 w-full;
-    @apply bg-green-500;
+    @apply bg-green-500 drop-shadow-2xl;
 }
 
 .creatureBoxBack,

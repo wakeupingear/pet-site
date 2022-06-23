@@ -3,14 +3,19 @@ import { Helmet } from 'react-helmet';
 import '../css/home.css';
 
 import { useAuth } from '../components/Auth';
-import CreatureBox from '../components/CreatureBox';
+import CreatureBox, {
+    createCreatureFromTemplate,
+} from '../components/CreatureBox';
 import { useDialogueMapper } from '../components/DialogueMapper';
 import IntroLogo from '../components/IntroLogo';
 import { __DEV__ } from '../utils/api';
 import { Link } from 'react-router-dom';
+import { usePhysics } from '../utils/physics/PhysicsEngine';
+import { sleep } from '../utils';
 
 export default function Home() {
     const { progress } = useAuth();
+    const { createCreature, updateObject } = usePhysics();
     const { setDomInteractions } = useDialogueMapper();
 
     useEffect(() => {
@@ -39,10 +44,26 @@ export default function Home() {
         });
     }, []);
 
+    const [introCreatureId, setIntroCreatureId] = useState<number>(NaN);
     const [introRolling, setIntroRolling] = useState(false);
-
     const introLoadCreature = async () => {
         setIntroRolling(false);
+        const id = createCreature(createCreatureFromTemplate(), {
+            x: -200,
+            y: 500,
+        });
+
+        updateObject(id, { moveTowardsMouse: false, moveDir: 3 });
+
+        await sleep(2000);
+        updateObject(id, { moveTowardsMouse: true, moveDir: 0 });
+
+        await sleep(10000);
+
+        updateObject(id, { moveTowardsMouse: false, moveDir: 3 });
+
+        await sleep(2000);
+
         setScrollable(true);
     };
 
@@ -53,14 +74,15 @@ export default function Home() {
         setScrollable(!isIntro);
 
         if (isIntro) {
-            setIntroRolling(true);
+            if (__DEV__) introLoadCreature();
+            else setIntroRolling(true);
         }
     }, [progress]);
 
     useEffect(() => {
-        if (pageRef.current && progress && progress !== 'intro') {
+        if (pageRef.current && progress && !__DEV__) {
             pageRef.current.scrollTo({
-                left: pageRef.current.scrollWidth,
+                left: progress === 'intro' ? 0 : pageRef.current.scrollWidth,
             });
         }
     }, [pageRef, progress]);
@@ -91,15 +113,23 @@ export default function Home() {
                         size={{ x: 900, y: 500 }}
                         physicsState={{
                             interactable: false,
+                            border: {
+                                top: 0,
+                                right: 600,
+                                bottom: 0,
+                                left: -600,
+                            },
                         }}
                     />
                     <div className="h-5 w-[1000px] rounded-full bg-black shadow-lg" />
                 </div>
                 <div className="screen bg-red-400">
                     <div className="door">
-                        <div>
-                            <Link to={'/store'} className="doorknob" />
-                        </div>
+                        <Link className="doorLink" to={'/store'}>
+                            <div className="doorInner">
+                                <div className="doorknob" />
+                            </div>
+                        </Link>
                     </div>
                 </div>
                 <div className="absolute bottom-0 h-8 w-full bg-slate-500"></div>

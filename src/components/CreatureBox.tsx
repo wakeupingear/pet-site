@@ -8,7 +8,7 @@ import { PhysicsState, usePhysics } from '../utils/physics/PhysicsEngine';
 import { Creature } from '../utils/physics/CreatureObject';
 import { useSettings } from './Settings';
 import { Vec2 } from '../utils/physics/PhysicsObject';
-import getLocation from '../utils/getLocation';
+import { getLocation } from '../utils';
 
 const COLORS = [
     '#6A5ACD',
@@ -31,6 +31,22 @@ interface CreatureBoxProps {
     variant?: string;
 }
 
+export const createCreatureFromTemplate = (
+    creatureData: Partial<Creature> = {}
+): Creature => {
+    return {
+        name: '',
+        health: 0,
+        ...creatureData,
+        styles: {
+            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+            radius: Math.round(70 + Math.random() * 80),
+            ...creatureData.styles,
+        },
+        location: getLocation(),
+    };
+};
+
 export default function CreatureBox(props: CreatureBoxProps) {
     const { width: screenWidth, height: screenHeight } = useWindowSize();
     const originalSize = props.size || { x: 900, y: 600 };
@@ -43,8 +59,8 @@ export default function CreatureBox(props: CreatureBoxProps) {
         physicsObjects,
         setCanvasOffset,
         setFPS,
-        setPhysics,
         setPhysicsCanvasRef,
+        updatePhysics,
     } = usePhysics();
 
     const localRef = useRef<HTMLCanvasElement>(null);
@@ -88,35 +104,18 @@ export default function CreatureBox(props: CreatureBoxProps) {
 
     useEffect(() => {
         if (active && props.physicsState) {
-            setPhysics(props.physicsState);
+            updatePhysics(props.physicsState);
         }
     }, [active]);
 
-    const createCreatureFromTemplate = (
-        creatureData: Partial<Creature> = {}
-    ) => {
-        const newCreature: Creature = {
-            name: '',
-            health: 0,
-            ...creatureData,
-            styles: {
-                color: COLORS[Math.floor(Math.random() * COLORS.length)],
-                radius: Math.round(70 + Math.random() * 80),
-                ...creatureData.styles,
-            },
-            location: getLocation(),
-        };
-        setMyCreature(newCreature);
-    };
-
     const toggleCreature = () => {
-        if (!myCreature) createCreatureFromTemplate();
+        if (!myCreature) setMyCreature(createCreatureFromTemplate());
         else destroyMyCreature();
     };
 
     return (
         <>
-            {__DEV__ && (
+            {__DEV__ && false && (
                 <div>
                     <Button onClick={toggleCreature}>
                         {!myCreature ? 'Create' : 'Destroy'}

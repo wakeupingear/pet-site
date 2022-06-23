@@ -12,7 +12,7 @@ import {
 } from '../utils/api';
 import { Creature } from '../utils/physics/CreatureObject';
 import { usePhysics } from '../utils/physics/PhysicsEngine';
-import getLocation from '../utils/getLocation';
+import { getLocation } from '../utils';
 
 const PROGRESS_URL = `/progress?host=site&pathname=${window.location.pathname}`;
 const STORAGE_VERSION = 1;
@@ -138,7 +138,7 @@ export default function Auth(props: Props) {
                 updateProgress(response.progress);
             } else if (response.status === 201) {
                 if (!userInfo.sessionToken) {
-                    updateProgress('newUser');
+                    updateProgress('intro');
                 } else if (isActiveSession()) {
                     updateUserInfo({ sessionToken: 'empty' });
                 }
@@ -165,11 +165,7 @@ export default function Auth(props: Props) {
     };
 
     useEffect(() => {
-        if (
-            (isActiveSession() || (loading && userInfo.sessionToken)) &&
-            !progress
-        )
-            getProgress();
+        if ((isActiveSession() || loading) && !progress) getProgress();
     }, [userInfo]);
 
     useEffect(() => {
@@ -179,8 +175,7 @@ export default function Auth(props: Props) {
         }
     }, [changedSettings]);
 
-    const { active, createCreature, destroyObject, updateCreature } =
-        usePhysics();
+    const { active, createCreature, destroyObject } = usePhysics();
     const [myCreature, setMyCreatureInternal] = useState<Creature | null>(null);
     const [myCreatureId, setMyCreatureId] = useState<number>(NaN);
     const setMyCreature = (creatureData: Creature | null) => {
@@ -196,7 +191,7 @@ export default function Auth(props: Props) {
     useEffect(() => {
         if (active && myCreature && getLocation() === myCreature.location) {
             if (!isNaN(myCreatureId)) {
-                updateCreature(myCreatureId, myCreature);
+                //updateCreature(myCreatureId, myCreature);
             } else {
                 const id = createCreature(myCreature);
                 setMyCreatureId(id);

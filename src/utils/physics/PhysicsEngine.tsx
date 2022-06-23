@@ -23,14 +23,12 @@ export interface PhysicsFunctions {
     physicsObjects: ObjEntries;
     setCanvasOffset: (position: Vec2) => void;
     setFPS: (fps: number) => void;
-    setPhysics: (physics: Partial<PhysicsState>) => void;
     setPhysicsCanvasRef: (ref: React.RefObject<HTMLCanvasElement>) => void;
-    updateCreature: (
+    updateObject: (
         id: number,
-        creatureData?: Creature,
-        position?: Vec2,
-        emotion?: CreatureEmotion
+        data: Partial<PhysicsObject | CreatureObject>
     ) => void;
+    updatePhysics: (physics: Partial<PhysicsState>) => void;
 }
 
 export interface MouseData extends Vec2 {
@@ -57,8 +55,12 @@ export interface PhysicsState {
     drag: number;
     gravity: number;
     interactable: boolean;
-    borderHorizontalPadding: Vec2;
-    borderVerticalPadding: Vec2;
+    border: {
+        top: number;
+        bottom: number;
+        left: number;
+        right: number;
+    };
 }
 let state: PhysicsState = {
     ag: 9.81,
@@ -66,27 +68,22 @@ let state: PhysicsState = {
     drag: 1.22,
     gravity: 1,
     interactable: true,
-    borderHorizontalPadding: { x: 0, y: 0 },
-    borderVerticalPadding: { x: 0, y: 0 },
+    border: { left: 0, right: 0, top: 0, bottom: 0 },
 };
+const defaultState = { ...state };
 
 interface Props {
     children?: JSX.Element[] | JSX.Element;
 }
 
 export default function PhysicsEngine(props: Props) {
-    const [physics, setPhysicsInternal] = useState(state);
+    const [physics, setPhysics] = useState(state);
     const [physicsObjects, setPhysicsObjects] = useState<ObjEntries>(objects);
-    const setPhysics = (physics: Partial<PhysicsState>) => {
+    const updatePhysics = (physics: Partial<PhysicsState>) => {
         state = {
             ...state,
             ...physics,
         };
-        setPhysicsInternal(state);
-    };
-
-    // Internal state update
-    const updatePhysicsState = () => {
         setPhysics(state);
     };
 
@@ -115,6 +112,9 @@ export default function PhysicsEngine(props: Props) {
         timer = setInterval(loop, fps * 1000);
     };
     const destroy = () => {
+        objects = {};
+        setPhysicsObjects(objects);
+        state = defaultState;
         if (timer) {
             clearInterval(timer);
             timer = null;
@@ -159,17 +159,13 @@ export default function PhysicsEngine(props: Props) {
         return id;
     };
 
-    const updateCreature = (
+    const updateObject = (
         id: number,
-        creatureData?: Creature,
-        position?: Vec2,
-        emotion?: CreatureEmotion
+        data: Partial<PhysicsObject | CreatureObject>
     ) => {
-        if (objects[id] instanceof CreatureObject) {
-            const obj = objects[id] as CreatureObject;
-            if (creatureData !== undefined) obj.creatureData = creatureData;
-            if (position !== undefined) obj.position = position;
-            if (emotion !== undefined) obj.emotion = emotion;
+        const obj = objects[id];
+        if (obj) {
+            obj.update(data);
             setPhysicsObjects({ ...objects });
         }
     };
@@ -282,21 +278,21 @@ export default function PhysicsEngine(props: Props) {
     };
 
     function collisionWall(ball: PhysicsObject) {
-        if (ball.position.x > width - ball.radius) {
+        if (ball.position.x > width - ball.radius + state.border.right) {
             ball.velocity.x *= ball.e;
-            ball.position.x = width - ball.radius;
+            ball.position.x = width - ball.radius + state.border.right;
         }
-        if (ball.position.y > height - ball.radius) {
+        if (ball.position.y > height - ball.radius + state.border.bottom) {
             ball.velocity.y *= ball.e;
-            ball.position.y = height - ball.radius;
+            ball.position.y = height - ball.radius + state.border.bottom;
         }
-        if (ball.position.x < ball.radius) {
+        if (ball.position.x < ball.radius + state.border.left) {
             ball.velocity.x *= ball.e;
-            ball.position.x = ball.radius;
+            ball.position.x = ball.radius + state.border.left;
         }
-        if (ball.position.y < ball.radius) {
+        if (ball.position.y < ball.radius + state.border.top) {
             ball.velocity.y *= ball.e;
-            ball.position.y = ball.radius;
+            ball.position.y = ball.radius + state.border.top;
         }
     }
     function collisionObject(b1: PhysicsObject) {
@@ -389,9 +385,9 @@ export default function PhysicsEngine(props: Props) {
                 physicsObjects,
                 setCanvasOffset,
                 setFPS,
-                setPhysics,
                 setPhysicsCanvasRef,
-                updateCreature,
+                updateObject,
+                updatePhysics,
             }}
         >
             {props.children}
